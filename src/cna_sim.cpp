@@ -33,6 +33,8 @@ using std::endl;
 using std::string;
 using std::vector;
 
+
+
 static string
 print_usage(const string &name) {
   std::ostringstream oss;
@@ -47,11 +49,11 @@ print_usage(const string &name) {
 int
 main (int argc, char *argv[]) {
   try {
-    
+
     string in_file;
     string out_file;
     size_t n_reads{0};
-    bool VERBOSE{false};    
+    bool VERBOSE{false};
 
     int opt;
     while ((opt = getopt(argc, argv, "i:n:o:v")) != -1) {
@@ -67,17 +69,17 @@ main (int argc, char *argv[]) {
         throw std::runtime_error(print_usage(argv[0]));
     }
 
-    if (in_file.empty() || out_file.empty() || !n_reads) 
+    if (in_file.empty() || out_file.empty() || !n_reads)
       throw std::runtime_error(print_usage(argv[0]));
 
     if (VERBOSE)
       cerr << "[READING GENOME]" << endl;
-    Genome genome(in_file);
+    Genome genome(in_file, VERBOSE);
 
   }
   catch (std::exception &e) {
     cerr << "ERROR: " << e.what() << endl;
     return EXIT_FAILURE;
-  } 
+  }
   return EXIT_SUCCESS;
 }

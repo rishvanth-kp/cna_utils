@@ -28,18 +28,18 @@ using std::string;
 
 class Genome {
 public:
-  Genome (const string &in_file) {
-    read_genome(in_file);
-  }
- 
-  void read_genome (const string &in_file);
+  Genome (const string &in_file);
+  Genome (const string &in_file, const bool V);
 
 private:
   vector<string> chr_name;
   vector<string> chr_seq;
   vector<size_t> chr_abs_pos;
   size_t n_chr;
-  size_t genome_size;     
+  size_t genome_size;
+  bool VERBOSE = false;
+
+  void read_genome (const string &in_file);
 };
 
 

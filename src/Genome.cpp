@@ -17,6 +17,7 @@
 *   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include<algorithm>
 #include<iostream>
 #include<fstream>
 
@@ -26,6 +27,14 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
+Genome::Genome (const string &in_file) {
+  read_genome(in_file);
+}
+
+Genome::Genome (const string &in_file, const bool V) {
+  VERBOSE = V;
+  read_genome(in_file);
+}
 
 void
 Genome::read_genome (const string &in_file) {
@@ -33,9 +42,35 @@ Genome::read_genome (const string &in_file) {
   if (!in)
     throw std::runtime_error("Cannot open " + in_file);
 
-  cout << "Reading Genome: " << in_file << endl;
-  
+  string line;
+  while (getline(in, line)){
+    if (line[0] == '>') {
+      chr_name.push_back(line.substr(1));
+      chr_seq.push_back(string{});
+      ++n_chr;
+    }
+    else
+      chr_seq.back() += line;
+  }
+
+  chr_abs_pos.push_back(0);
+  for (size_t i = 0; i < n_chr; ++i) {
+    std::transform(chr_seq[i].begin(), chr_seq[i].end(),
+                    chr_seq[i].begin(), toupper);
+    genome_size += chr_seq[i].length();
+    chr_abs_pos.push_back(genome_size);
+  }
+
+  if (VERBOSE) {
+    cerr << "[GENOME STATS]" << endl;
+    cerr << "\tGenome size: " << genome_size << endl;
+    cerr << "\tchr_name\tchr_size\tchr_abs_pos" << endl;
+    for (size_t i = 0; i < n_chr; ++i) {
+      cerr << "\t" << chr_name[i]
+           << "\t" << chr_seq[i].length()
+           << "\t" << chr_abs_pos[i] << endl;
+    }
+  }
 
   in.close();
 }
-
