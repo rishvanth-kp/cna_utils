@@ -22,7 +22,10 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <fstream>
 #include <unistd.h>
+
+#include "Genome.hpp"
 
 using std::cout;
 using std::cerr;
@@ -66,6 +69,10 @@ main (int argc, char *argv[]) {
 
     if (in_file.empty() || out_file.empty() || !n_reads) 
       throw std::runtime_error(print_usage(argv[0]));
+
+    if (VERBOSE)
+      cerr << "[READING GENOME]" << endl;
+    Genome genome(in_file);
 
   }
   catch (std::exception &e) {

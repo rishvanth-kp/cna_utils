@@ -20,19 +20,30 @@
 PROGS = cna_sim
 
 CXX = g++
-CFLAGS = -Wall
+CXXFLAGS = -Wall
 OPTFLAGS = -O2
 DEBUGFLAGS = -g
 
 ifdef OPT
-CFLAGS += $(OPTFLAGS)
+CXXFLAGS += $(OPTFLAGS)
 endif
 
 ifdef DEBUG
-CFLAGS += $(DEBUGFLAGS)
+CXXFLAGS += $(DEBUGFLAGS)
 endif
 
 all: $(PROGS)
+
+$(PROGS): 
+
+cna_sim: cna_sim.cpp Genome.o
+	$(CXX) $(CXXFLAGS) $^ -o $@
+
+%.o: %.cpp %.hpp
+	$(CXX) $(CXXFLAGS) -c $<
+
+%:%.cpp
+	$(CXX) $(CXXFLAGS) $^ -o $@
 
 clean:
 	rm $(PROGS)
