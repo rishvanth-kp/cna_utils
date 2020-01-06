@@ -28,8 +28,12 @@ using std::string;
 
 class Genome {
 public:
-  Genome (const string &in_file);
+  Genome (const string &in_file) : Genome(in_file, VERBOSE) {};
   Genome (const string &in_file, const bool V);
+
+  size_t chr_count () const {return n_chr;}
+  size_t chr_len (const size_t i) const {return chr_seq[i].length();}
+  string chr_tag (const size_t i) const {return chr_name[i];}
 
 private:
   vector<string> chr_name;

@@ -27,10 +27,6 @@ using std::cout;
 using std::cerr;
 using std::endl;
 
-Genome::Genome (const string &in_file) {
-  read_genome(in_file);
-}
-
 Genome::Genome (const string &in_file, const bool V) {
   VERBOSE = V;
   read_genome(in_file);
