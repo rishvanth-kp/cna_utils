@@ -60,7 +60,7 @@ Genome::read_genome (const string &in_file) {
   if (VERBOSE) {
     cerr << "[GENOME STATS]" << endl;
     cerr << "\tGenome size: " << genome_size << endl;
-    cerr << "\tchr_name\tchr_size\tchr_abs_pos" << endl;
+    cerr << "\tchr\tsize\tabs_pos" << endl;
     for (size_t i = 0; i < n_chr; ++i) {
       cerr << "\t" << chr_name[i]
            << "\t" << chr_seq[i].length()

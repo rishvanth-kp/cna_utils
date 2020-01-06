@@ -68,6 +68,7 @@ private:
   vector<size_t> end; // half-open intervals
   vector<size_t> cn;
   vector<size_t> abs_pos;
+  size_t cn_genome_size;
   bool VERBOSE = false;
 
   void set_default_cna (const Genome &genome);
@@ -85,15 +86,13 @@ CnaSim::set_cna (const Genome &genome, const string &cna_regions) {
 
   string line;
   vector<string> tokens;
-  string cna_chr;
-  size_t cna_start, cna_end, cna_cn;
   size_t curr_chr = 0;
   while (getline(in, line)) {
     split_string(line, tokens);
-    cna_chr = tokens[0];
-    cna_start = atoi(tokens[1].c_str());
-    cna_end = atoi(tokens[2].c_str());
-    cna_cn = atoi(tokens[3].c_str());
+    const string cna_chr = tokens[0];
+    const size_t cna_start = atoi(tokens[1].c_str());
+    const size_t cna_end = atoi(tokens[2].c_str());
+    const size_t cna_cn = atoi(tokens[3].c_str());
 
     if (chr.size() != 0 && genome.chr_tag(curr_chr) != cna_chr){
       if (end.back() != genome.chr_len(curr_chr)) {
@@ -146,9 +145,11 @@ CnaSim::set_cna (const Genome &genome, const string &cna_regions) {
   abs_pos.push_back(0);
   for (size_t i = 1; i < chr.size(); ++i)
     abs_pos.push_back(abs_pos[i-1] + ((end[i-1] - start[i-1])*cn[i-1]));
+  cn_genome_size = abs_pos.back() + ((end.back() - start.back())*cn.back());
+
 
   if (VERBOSE)
-    cerr << print_cna_list(genome) << endl;
+    cerr << print_cna_list(genome);
 
   in.close();
 }
@@ -168,15 +169,17 @@ CnaSim::set_default_cna (const Genome &genome) {
   abs_pos.push_back(0);
   for (size_t i = 1; i < chr.size(); ++i)
     abs_pos.push_back(abs_pos[i-1] + ((end[i-1] - start[i-1])*cn[i-1]));
+  cn_genome_size = abs_pos.back() + ((end.back() - start.back())*cn.back());
 
   if (VERBOSE)
-    cerr << print_cna_list(genome) << endl;
+    cerr << print_cna_list(genome);
 }
 
 string
 CnaSim::print_cna_list (const Genome &genome) {
   std::ostringstream oss;
   oss << "[CNA REGIONS]" << endl;
+  oss << "\tAltered genome size: " << cn_genome_size << endl;
   oss << "\tchr\tstart\tend\tcn\tabs_pos" << endl;
   for (size_t i = 0; i < chr.size(); ++i) {
     oss << "\t" << genome.chr_tag(chr[i])
