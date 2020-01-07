@@ -155,13 +155,15 @@ CnaSim::set_cna (const Genome &genome, const string &cna_regions) {
     }
 
     if (cna_start != 0) {
-      if (genome.chr_tag(chr.back()) != cna_chr)
-        start.push_back(0);
-      else
-        start.push_back(end.back());
-      chr.push_back(curr_chr);
-      end.push_back(cna_start);
-      cn.push_back(normal_cn);
+      size_t seg_start = 0;
+      if (chr.size() != 0 && genome.chr_tag(chr.back()) == cna_chr)
+        seg_start = end.back();
+      if (cna_start - seg_start > 0) {
+        chr.push_back(curr_chr);
+        start.push_back(seg_start);
+        end.push_back(cna_start);
+        cn.push_back(normal_cn);
+      }
     }
 
     chr.push_back(curr_chr);
