@@ -296,14 +296,14 @@ main (int argc, char *argv[]) {
       cerr << "[READING GENOME]" << endl;
     Genome genome(in_file, VERBOSE);
 
+    std::ofstream out{out_file};
+    if (!out)
+      throw std::runtime_error("cannot open " + out_file);
+
 
     if (VERBOSE)
       cerr << "[SETTING TUMOR CNA REGIONS]" << endl;
     CnaSim tumor_cna(genome, cna_regions, VERBOSE);
-
-    std::ofstream out{out_file};
-    if (!out)
-      throw std::runtime_error("cannot open " + out_file);
 
     const size_t n_tumor_reads = tfx * n_reads;
     if (VERBOSE) {
@@ -318,20 +318,22 @@ main (int argc, char *argv[]) {
                 info);
     }
 
-    if (VERBOSE)
-      cerr << "[SETTING NORMAL CNA REGIONS]" << endl;
-    CnaSim normal_cna(genome, VERBOSE);
-
     const size_t n_normal_reads = n_reads - n_tumor_reads;
-    read_count = 0;
-    if (VERBOSE){
-      cerr << "[GENERATING NORMAL READS]" << endl;
-      cerr << "\tNormal reads: " << n_normal_reads << endl;
-    }
-    while (++read_count <= n_normal_reads) {
-      normal_cna.sample_genome(genome, read_len, info);
-      out << format_fasta(string("normal_" + std::to_string(read_count)),
-                info);
+    if (n_normal_reads > 0) {
+      if (VERBOSE)
+        cerr << "[SETTING NORMAL CNA REGIONS]" << endl;
+      CnaSim normal_cna(genome, VERBOSE);
+
+      read_count = 0;
+      if (VERBOSE){
+        cerr << "[GENERATING NORMAL READS]" << endl;
+        cerr << "\tNormal reads: " << n_normal_reads << endl;
+      }
+      while (++read_count <= n_normal_reads) {
+        normal_cna.sample_genome(genome, read_len, info);
+        out << format_fasta(string("normal_" + std::to_string(read_count)),
+                  info);
+      }
     }
 
     out.close();
