@@ -70,3 +70,10 @@ Genome::read_genome (const string &in_file) {
 
   in.close();
 }
+
+
+string
+Genome::chr_substr (const size_t chr, const size_t pos,
+                     const size_t len) const {
+  return chr_seq[chr].substr(pos, len);
+}

@@ -21,9 +21,11 @@
 #include <cstdlib>
 #include <vector>
 #include <string>
+#include <random>
 #include <sstream>
 #include <fstream>
 #include <unistd.h>
+#include <algorithm>
 
 #include "Genome.hpp"
 
@@ -32,6 +34,12 @@ using std::cerr;
 using std::endl;
 using std::string;
 using std::vector;
+
+struct ReadInfo {
+  string read;
+  string chr_name;
+  size_t chr_pos;
+};
 
 void
 split_string (const string &in, vector<string> &tokens,
@@ -54,13 +62,19 @@ public:
   CnaSim (const Genome &genome, const bool V) {
     VERBOSE = V;
     set_default_cna(genome);
+    abs_pos_dist = std::uniform_int_distribution<size_t>(0, cn_genome_size);
   }
+
   CnaSim (const Genome &genome, const string& cna_regions) :
             CnaSim(genome, cna_regions, VERBOSE) {}
   CnaSim (const Genome &genome, const string& cna_regions, const bool V) {
     VERBOSE = V;
     set_cna(genome, cna_regions);
+    abs_pos_dist = std::uniform_int_distribution<size_t>(0, cn_genome_size);
   }
+
+  void sample_genome(const Genome &genome, const size_t readlen,
+                      ReadInfo &info);
 
 private:
   vector<size_t> chr;
@@ -69,12 +83,40 @@ private:
   vector<size_t> cn;
   vector<size_t> abs_pos;
   size_t cn_genome_size;
+
+  std::mt19937 rng{std::random_device()()};
+  std::uniform_int_distribution<size_t> abs_pos_dist;
   bool VERBOSE = false;
 
   void set_default_cna (const Genome &genome);
   void set_cna (const Genome &genome, const string &cna_regions);
-  string print_cna_list (const Genome &genome);
+  string print_cna_list (const Genome &genome) const;
 };
+
+void
+CnaSim::sample_genome (const Genome &genome, const size_t readlen,
+                        ReadInfo &info) {
+
+  size_t cn_abs_pos, index, normal_pos;
+  string read;
+  bool done = false;
+  while (!done) {
+    cn_abs_pos = abs_pos_dist(rng);
+    index = std::upper_bound(abs_pos.begin(), abs_pos.end(), cn_abs_pos)
+              - abs_pos.begin() - 1;
+    normal_pos = (cn_abs_pos - abs_pos[index])
+                  % (end[index] - start[index]);
+    read = genome.chr_substr(chr[index], normal_pos, readlen);
+
+    if (read.find('N') == string::npos && read.length() == readlen) {
+      info.read = read;
+      info.chr_name = genome.chr_tag(chr[index]);
+      info.chr_pos = normal_pos;
+      done = true;
+    }
+
+  }
+}
 
 void
 CnaSim::set_cna (const Genome &genome, const string &cna_regions) {
@@ -147,7 +189,6 @@ CnaSim::set_cna (const Genome &genome, const string &cna_regions) {
     abs_pos.push_back(abs_pos[i-1] + ((end[i-1] - start[i-1])*cn[i-1]));
   cn_genome_size = abs_pos.back() + ((end.back() - start.back())*cn.back());
 
-
   if (VERBOSE)
     cerr << print_cna_list(genome);
 
@@ -176,7 +217,7 @@ CnaSim::set_default_cna (const Genome &genome) {
 }
 
 string
-CnaSim::print_cna_list (const Genome &genome) {
+CnaSim::print_cna_list (const Genome &genome) const {
   std::ostringstream oss;
   oss << "[CNA REGIONS]" << endl;
   oss << "\tAltered genome size: " << cn_genome_size << endl;
@@ -192,14 +233,26 @@ CnaSim::print_cna_list (const Genome &genome) {
 }
 
 static string
+format_fasta (const string &name, const ReadInfo &info) {
+  std::ostringstream oss;
+  oss << ">" << name
+      << " " << info.chr_name
+      << ":" << info.chr_pos << endl
+      << info.read << endl;
+  return oss.str();
+}
+
+static string
 print_usage(const string &name) {
   std::ostringstream oss;
-  oss << name
-      << " -i [in_file.txt]"
-      << " -c [cna_regions.bed]"
-      << " -n [number of reads]"
-      << " -o [out_file.txt]"
-      << " -v verbose" << endl;
+  oss << name << " [options]" << endl
+      << "\t-i in_file.txt" << endl
+      << "\t-c cna_regions.bed (required if TFx > 0.0)" << endl
+      << "\t-t tumor fraction (default: 1.0)" << endl
+      << "\t-n number of reads (default: 1M)" << endl
+      << "\t-l read length (default: 100)" << endl
+      << "\t-o out_file.txt" << endl
+      << "\t-v verbose (default: false)" << endl;
   return oss.str();
 }
 
@@ -210,17 +263,23 @@ main (int argc, char *argv[]) {
     string in_file;
     string out_file;
     string cna_regions;
-    size_t n_reads{0};
+    size_t n_reads{1000000};
+    size_t read_len{100};
+    float tfx{1.0};
     bool VERBOSE{false};
 
     int opt;
-    while ((opt = getopt(argc, argv, "i:c:n:o:v")) != -1) {
+    while ((opt = getopt(argc, argv, "i:c:t:n:l:o:v")) != -1) {
       if (opt == 'i')
         in_file = optarg;
       else if (opt == 'c')
         cna_regions = optarg;
+      else if (opt == 't')
+        tfx = atof(optarg);
       else if (opt == 'n')
         n_reads = atoi(optarg);
+      else if (opt == 'l')
+        read_len = atoi(optarg);
       else if (opt == 'o')
         out_file = optarg;
       else if (opt == 'v')
@@ -229,21 +288,53 @@ main (int argc, char *argv[]) {
         throw std::runtime_error(print_usage(argv[0]));
     }
 
-    if (in_file.empty() || cna_regions.empty() || out_file.empty()
-        || !n_reads)
+    if (in_file.empty() || (tfx > 0.0 && cna_regions.empty())
+        || tfx > 1 || out_file.empty())
       throw std::runtime_error(print_usage(argv[0]));
 
     if (VERBOSE)
       cerr << "[READING GENOME]" << endl;
     Genome genome(in_file, VERBOSE);
 
+
     if (VERBOSE)
       cerr << "[SETTING TUMOR CNA REGIONS]" << endl;
     CnaSim tumor_cna(genome, cna_regions, VERBOSE);
 
+    std::ofstream out{out_file};
+    if (!out)
+      throw std::runtime_error("cannot open " + out_file);
+
+    const size_t n_tumor_reads = tfx * n_reads;
+    if (VERBOSE) {
+      cerr << "[GENERATING TUMOR READS]" << endl;
+      cerr << "\tTumor reads: " << n_tumor_reads << endl;
+    }
+    ReadInfo info;
+    size_t read_count = 0;
+    while (++read_count <= n_tumor_reads) {
+      tumor_cna.sample_genome(genome, read_len, info);
+      out << format_fasta(string("normal_" + std::to_string(read_count)),
+                info);
+    }
+
     if (VERBOSE)
       cerr << "[SETTING NORMAL CNA REGIONS]" << endl;
     CnaSim normal_cna(genome, VERBOSE);
+
+    const size_t n_normal_reads = n_reads - n_tumor_reads;
+    read_count = 0;
+    if (VERBOSE){
+      cerr << "[GENERATING NORMAL READS]" << endl;
+      cerr << "\tNormal reads: " << n_normal_reads << endl;
+    }
+    while (++read_count <= n_normal_reads) {
+      normal_cna.sample_genome(genome, read_len, info);
+      out << format_fasta(string("normal_" + std::to_string(read_count)),
+                info);
+    }
+
+    out.close();
 
   }
   catch (std::exception &e) {

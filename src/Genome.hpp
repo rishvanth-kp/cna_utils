@@ -34,6 +34,8 @@ public:
   size_t chr_count () const {return n_chr;}
   size_t chr_len (const size_t i) const {return chr_seq[i].length();}
   string chr_tag (const size_t i) const {return chr_name[i];}
+  string chr_substr (const size_t chr, const size_t loc,
+                     const size_t len) const;
 
 private:
   vector<string> chr_name;
