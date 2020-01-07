@@ -46,6 +46,6 @@ cna_sim: cna_sim.cpp Genome.o
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 clean:
-	rm $(PROGS)
+	rm $(PROGS) *.o
 
 .PHONY: clean

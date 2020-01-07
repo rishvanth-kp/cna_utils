@@ -301,21 +301,23 @@ main (int argc, char *argv[]) {
       throw std::runtime_error("cannot open " + out_file);
 
 
-    if (VERBOSE)
-      cerr << "[SETTING TUMOR CNA REGIONS]" << endl;
-    CnaSim tumor_cna(genome, cna_regions, VERBOSE);
-
-    const size_t n_tumor_reads = tfx * n_reads;
-    if (VERBOSE) {
-      cerr << "[GENERATING TUMOR READS]" << endl;
-      cerr << "\tTumor reads: " << n_tumor_reads << endl;
-    }
     ReadInfo info;
     size_t read_count = 0;
-    while (++read_count <= n_tumor_reads) {
-      tumor_cna.sample_genome(genome, read_len, info);
-      out << format_fasta(string("normal_" + std::to_string(read_count)),
-                info);
+    const size_t n_tumor_reads = tfx * n_reads;
+    if (n_tumor_reads > 0) {
+      if (VERBOSE)
+        cerr << "[SETTING TUMOR CNA REGIONS]" << endl;
+      CnaSim tumor_cna(genome, cna_regions, VERBOSE);
+
+      if (VERBOSE) {
+        cerr << "[GENERATING TUMOR READS]" << endl;
+        cerr << "\tTumor reads: " << n_tumor_reads << endl;
+      }
+      while (++read_count <= n_tumor_reads) {
+        tumor_cna.sample_genome(genome, read_len, info);
+        out << format_fasta(string("normal_" + std::to_string(read_count)),
+                  info);
+      }
     }
 
     const size_t n_normal_reads = n_reads - n_tumor_reads;
