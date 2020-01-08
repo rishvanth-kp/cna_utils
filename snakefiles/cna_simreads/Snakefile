@@ -1,0 +1,51 @@
+rule all:
+  input:
+    expand('cnv/{sample}.pdf', sample=config['samples'])
+
+rule mapReads:
+  input:
+    ref = config['ref'],
+    read = 'reads/{sample}.fa',
+  output:
+    sam = temp('mapped_reads/{sample}.sam'),
+    flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
+  threads: 15
+  log:
+    'logs/{sample}_bwa.log'
+  benchmark:
+    'logs/{sample}_bwa.benchmark'
+  shell:
+    '{config[bwa]} mem -t {threads} {input.ref} {input.read} '
+    '1> {output.sam} 2> {log}; '
+    'samtools flagstat {output.sam} > {output.flagstat}'
+
+rule removeAmbig:
+  input:
+    'mapped_reads/{sample}.sam'
+  output:
+    sam = temp('mapped_reads/{sample}_mq10.sam'),
+    flagstat = 'flagstat/{sample}_mq10_flagstat.txt'
+  params:
+    mapq = 10
+  shell:
+    'samtools view -q {params.mapq} -h -o {output.sam} {input}; '
+    'samtools flagstat {output.sam} > {output.flagstat}'
+    
+rule cnvAnalysis:
+  input:
+    sam = 'mapped_reads/{sample}_mq10.sam',
+    chromSizes = config['chromSizes'],
+    binBounds = config['binBounds'],
+    gc = config['gc'],
+    badBins = config['badBins']
+  output:
+    counts = 'cnv/{sample}_bincounts.bed',
+    stats = 'cnv/{sample}_stats.txt',
+    cnvPlot = 'cnv/{sample}.pdf'
+  shell:
+    '{config[binCounts]} -i {input.sam} -c {input.chromSizes} '
+    '-b {input.binBounds} -o {output.counts} -s {output.stats}; '
+    '{config[cbs]} {output.counts} {wildcards.sample} {input.gc} '
+    '{input.badBins}; '
+    'mv {wildcards.sample}.data.txt {wildcards.sample}.short.txt '
+    '{wildcards.sample}.pdf cnv/'

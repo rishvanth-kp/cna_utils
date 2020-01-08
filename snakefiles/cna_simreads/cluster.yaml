@@ -1,0 +1,11 @@
+__default__:
+  partition: 'cmb'
+  time: '24:00:00'
+  mem: '8gb'
+  cores: 1
+  logout: 'slurm_logs/slurm_logs_{rule}_{wildcards.sample}.out'
+  logerror: 'slurm_logs/slurm_logs_{rule}_{wildcards.sample}.err'
+
+mapReads:
+  cores: 16
+  mem: '64gb'
