@@ -82,7 +82,7 @@ private:
   vector<size_t> end; // half-open intervals
   vector<size_t> cn;
   vector<size_t> abs_pos;
-  size_t cn_genome_size;
+  size_t cn_genome_size = 0;
 
   std::mt19937 rng{std::random_device()()};
   std::uniform_int_distribution<size_t> abs_pos_dist;
@@ -90,6 +90,8 @@ private:
 
   void set_default_cna (const Genome &genome);
   void set_cna (const Genome &genome, const string &cna_regions);
+  void add_cna_segment (const size_t cna_chr, const size_t cna_start,
+                        const size_t cna_end, const size_t cna_cn);
   string print_cna_list (const Genome &genome) const;
 };
 
@@ -104,8 +106,8 @@ CnaSim::sample_genome (const Genome &genome, const size_t readlen,
     cn_abs_pos = abs_pos_dist(rng);
     index = std::upper_bound(abs_pos.begin(), abs_pos.end(), cn_abs_pos)
               - abs_pos.begin() - 1;
-    normal_pos = (cn_abs_pos - abs_pos[index])
-                  % (end[index] - start[index]);
+    normal_pos = ((cn_abs_pos - abs_pos[index])
+                  % (end[index] - start[index])) + start[index];
     read = genome.chr_substr(chr[index], normal_pos, readlen);
 
     if (read.find('N') == string::npos && read.length() == readlen) {
@@ -114,9 +116,23 @@ CnaSim::sample_genome (const Genome &genome, const size_t readlen,
       info.chr_pos = normal_pos;
       done = true;
     }
-
   }
 }
+
+
+void
+CnaSim::add_cna_segment (const size_t cna_chr, const size_t cna_start,
+                         const size_t cna_end, const size_t cna_cn) {
+
+  chr.push_back(cna_chr);
+  start.push_back(cna_start);
+  end.push_back(cna_end);
+  cn.push_back(cna_cn);
+  abs_pos.push_back(cn_genome_size);
+
+  cn_genome_size += (end.back() - start.back())*cn.back();
+}
+
 
 void
 CnaSim::set_cna (const Genome &genome, const string &cna_regions) {
@@ -137,20 +153,14 @@ CnaSim::set_cna (const Genome &genome, const string &cna_regions) {
     const size_t cna_cn = atoi(tokens[3].c_str());
 
     if (chr.size() != 0 && genome.chr_tag(curr_chr) != cna_chr){
-      if (end.back() != genome.chr_len(curr_chr)) {
-        chr.push_back(curr_chr);
-        start.push_back(end.back());
-        end.push_back(genome.chr_len(curr_chr));
-        cn.push_back(normal_cn);
-      }
+      if (end.back() != genome.chr_len(curr_chr))
+        add_cna_segment(curr_chr, end.back(), genome.chr_len(curr_chr),
+                        normal_cn);
       ++curr_chr;
     }
 
     while (genome.chr_tag(curr_chr) != cna_chr) {
-      chr.push_back(curr_chr);
-      start.push_back(0);
-      end.push_back(genome.chr_len(curr_chr));
-      cn.push_back(normal_cn);
+      add_cna_segment(curr_chr, 0, genome.chr_len(curr_chr), normal_cn);
       ++curr_chr;
     }
 
@@ -158,38 +168,18 @@ CnaSim::set_cna (const Genome &genome, const string &cna_regions) {
       size_t seg_start = 0;
       if (chr.size() != 0 && genome.chr_tag(chr.back()) == cna_chr)
         seg_start = end.back();
-      if (cna_start - seg_start > 0) {
-        chr.push_back(curr_chr);
-        start.push_back(seg_start);
-        end.push_back(cna_start);
-        cn.push_back(normal_cn);
-      }
+      if (cna_start - seg_start > 0)
+        add_cna_segment(curr_chr, seg_start, cna_start, normal_cn);
     }
 
-    chr.push_back(curr_chr);
-    start.push_back(cna_start);
-    end.push_back(cna_end);
-    cn.push_back(cna_cn);
+    add_cna_segment(curr_chr, cna_start, cna_end, cna_cn);
   }
 
-  if (end.back() != genome.chr_len(curr_chr)) {
-    chr.push_back(curr_chr);
-    start.push_back(end.back());
-    end.push_back(genome.chr_len(curr_chr));
-    cn.push_back(normal_cn);
-  }
+  if (end.back() != genome.chr_len(curr_chr))
+    add_cna_segment(curr_chr, end.back(), genome.chr_len(curr_chr), normal_cn);
 
-  while (++curr_chr < genome.chr_count()) {
-    chr.push_back(curr_chr);
-    start.push_back(0);
-    end.push_back(genome.chr_len(curr_chr));
-    cn.push_back(normal_cn);
-  }
-
-  abs_pos.push_back(0);
-  for (size_t i = 1; i < chr.size(); ++i)
-    abs_pos.push_back(abs_pos[i-1] + ((end[i-1] - start[i-1])*cn[i-1]));
-  cn_genome_size = abs_pos.back() + ((end.back() - start.back())*cn.back());
+  while (++curr_chr < genome.chr_count())
+    add_cna_segment(curr_chr, 0, genome.chr_len(curr_chr), normal_cn);
 
   if (VERBOSE)
     cerr << print_cna_list(genome);
@@ -202,17 +192,8 @@ CnaSim::set_default_cna (const Genome &genome) {
 
   const size_t normal_cn = 2;
   const size_t n_chr = genome.chr_count();
-  for (size_t i = 0; i < n_chr; ++i) {
-    chr.push_back(i);
-    start.push_back(0);
-    end.push_back(genome.chr_len(i));
-    cn.push_back(normal_cn);
-  }
-
-  abs_pos.push_back(0);
-  for (size_t i = 1; i < chr.size(); ++i)
-    abs_pos.push_back(abs_pos[i-1] + ((end[i-1] - start[i-1])*cn[i-1]));
-  cn_genome_size = abs_pos.back() + ((end.back() - start.back())*cn.back());
+  for (size_t i = 0; i < n_chr; ++i)
+    add_cna_segment(i, 0, genome.chr_len(i), normal_cn);
 
   if (VERBOSE)
     cerr << print_cna_list(genome);
