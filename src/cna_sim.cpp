@@ -317,7 +317,7 @@ main (int argc, char *argv[]) {
       }
       while (++read_count <= n_tumor_reads) {
         tumor_cna.sample_genome(genome, read_len, info);
-        out << format_fasta(string("normal_" + std::to_string(read_count)),
+        out << format_fasta(string("tumor_" + std::to_string(read_count)),
                   info);
       }
     }
