@@ -1,13 +1,21 @@
+cnaSim:
+  /home/qcb-panasas/kaliappa/code/cna/cna_utils/src/cna_sim
+normalGenome:
+  /home/qcb-panasas/kaliappa/data/hg19/hg19_24chr.fa
+simTfx: 1
+simReadLen: 100
+simReadCount: 1000000
+
 bwa: /home/qcb-panasas/kaliappa/code/bwa/bwa-0.7.17/bwa
 ref: /home/qcb-panasas/kaliappa/data/hg19/bwa/hg19.fa
 
-chromSizes: 
+chromSizes:
   /home/qcb-panasas/kaliappa/code/smurfseq_scripts/data/hg19.chrom.sizes
-binBounds: 
+binBounds:
   /home/qcb-panasas/kaliappa/code/smurfseq_scripts/data/bins_5k_hg19.bed
-gc: 
+gc:
   /home/qcb-panasas/kaliappa/code/smurfseq_scripts/data/bins_5k_hg19_gc.txt
-badBins: 
+badBins:
   /home/qcb-panasas/kaliappa/code/smurfseq_scripts/data/bins_5k_hg19_exclude.txt
 binCounts:
   /home/qcb-panasas/kaliappa/code/smurfseq_scripts/scripts/getBinCounts.py
@@ -15,7 +23,6 @@ cbs:
   /home/qcb-panasas/kaliappa/code/smurfseq_scripts/scripts/cnvAnalysis.R
 
 samples:
-  - hg19_cn2
   - hg19_p_cn1
   - hg19_p_cn4
   - hg19_q_cn1

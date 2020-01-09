@@ -2,12 +2,27 @@ rule all:
   input:
     expand('cnv/{sample}.pdf', sample=config['samples'])
 
+rule simReads:
+  input:
+    genome = config['normalGenome'],
+    cnaBed = 'cna_regions/{sample}.bed'
+  output:
+    'reads/{sample}.fa'
+  params:
+    tfx = config['simTfx'],
+    readLen = config['simReadLen'],
+    readCount = config['simReadCount']
+  shell:
+    '{config[cnaSim]} -i {input.genome} -c {input.cnaBed} '
+    '-t {params.tfx} -l {params.readLen} -n {params.readCount} '
+    '-o {output}'
+
 rule mapReads:
   input:
     ref = config['ref'],
     read = 'reads/{sample}.fa',
   output:
-    sam = temp('mapped_reads/{sample}.sam'),
+    sam = 'mapped_reads/{sample}.sam',
     flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
   threads: 15
   log:
@@ -30,7 +45,7 @@ rule removeAmbig:
   shell:
     'samtools view -q {params.mapq} -h -o {output.sam} {input}; '
     'samtools flagstat {output.sam} > {output.flagstat}'
-    
+
 rule cnvAnalysis:
   input:
     sam = 'mapped_reads/{sample}_mq10.sam',
