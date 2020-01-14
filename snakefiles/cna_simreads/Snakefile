@@ -1,15 +1,16 @@
 rule all:
   input:
-    expand('cnv/{sample}.pdf', sample=config['samples'])
+    expand('analysis/{sample}_tf{tfx}_ratioDist.pdf', 
+            sample=config['samples'], tfx=config['tfx'])
 
 rule simReads:
   input:
     genome = config['normalGenome'],
     cnaBed = 'cna_regions/{sample}.bed'
   output:
-    'reads/{sample}.fa'
+    'reads/{sample}_tf{tfx}.fa'
   params:
-    tfx = config['simTfx'],
+    tfx = '{tfx}',
     readLen = config['simReadLen'],
     readCount = config['simReadCount']
   shell:
@@ -20,15 +21,15 @@ rule simReads:
 rule mapReads:
   input:
     ref = config['ref'],
-    read = 'reads/{sample}.fa',
+    read = 'reads/{sample}_tf{tfx}.fa',
   output:
-    sam = 'mapped_reads/{sample}.sam',
-    flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
+    sam = 'mapped_reads/{sample}_tf{tfx,[0-9]+}.sam',
+    flagstat = 'flagstat/{sample}_tf{tfx}_mapped_flagstat.txt'
   threads: 15
   log:
-    'logs/{sample}_bwa.log'
+    'logs/{sample}_tf{tfx}_bwa.log'
   benchmark:
-    'logs/{sample}_bwa.benchmark'
+    'logs/{sample}_tf{tfx}_bwa.benchmark'
   shell:
     '{config[bwa]} mem -t {threads} {input.ref} {input.read} '
     '1> {output.sam} 2> {log}; '
@@ -36,10 +37,10 @@ rule mapReads:
 
 rule removeAmbig:
   input:
-    'mapped_reads/{sample}.sam'
+    'mapped_reads/{sample}_tf{tfx}.sam'
   output:
-    sam = temp('mapped_reads/{sample}_mq10.sam'),
-    flagstat = 'flagstat/{sample}_mq10_flagstat.txt'
+    sam = 'mapped_reads/{sample}_tf{tfx}_mq10.sam',
+    flagstat = 'flagstat/{sample}_tf{tfx}_mq10_flagstat.txt'
   params:
     mapq = 10
   shell:
@@ -48,19 +49,30 @@ rule removeAmbig:
 
 rule cnvAnalysis:
   input:
-    sam = 'mapped_reads/{sample}_mq10.sam',
+    sam = 'mapped_reads/{sample}_tf{tfx}_mq10.sam',
     chromSizes = config['chromSizes'],
     binBounds = config['binBounds'],
     gc = config['gc'],
     badBins = config['badBins']
   output:
-    counts = 'cnv/{sample}_bincounts.bed',
-    stats = 'cnv/{sample}_stats.txt',
-    cnvPlot = 'cnv/{sample}.pdf'
+    counts = 'cnv/{sample}_tf{tfx}_bincounts.bed',
+    stats = 'cnv/{sample}_tf{tfx}_stats.txt',
+    cnvPlot = 'cnv/{sample}_tf{tfx}.pdf',
+    cnvData = 'cnv/{sample}_tf{tfx}.data.txt'
   shell:
     '{config[binCounts]} -i {input.sam} -c {input.chromSizes} '
     '-b {input.binBounds} -o {output.counts} -s {output.stats}; '
-    '{config[cbs]} {output.counts} {wildcards.sample} {input.gc} '
-    '{input.badBins}; '
-    'mv {wildcards.sample}.data.txt {wildcards.sample}.short.txt '
-    '{wildcards.sample}.pdf cnv/'
+    '{config[cbs]} {output.counts} {wildcards.sample}_tf{wildcards.tfx} '
+    '{input.gc} {input.badBins}; '
+    'mv {wildcards.sample}_tf{wildcards.tfx}.data.txt '
+    '{wildcards.sample}_tf{wildcards.tfx}.short.txt '
+    '{wildcards.sample}_tf{wildcards.tfx}.pdf cnv/'
+
+rule ratioDist:
+  input:
+    'cnv/{sample}_tf{tfx}.data.txt'
+  output:
+    'analysis/{sample}_tf{tfx}_ratioDist.pdf'
+  shell:
+    '{config[ratioDist]} {input} {wildcards.sample}_tf{wildcards.tfx}; '
+    'mv {wildcards.sample}_tf{wildcards.tfx}_ratioDist.pdf analysis/ '

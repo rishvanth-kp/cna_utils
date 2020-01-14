@@ -2,9 +2,14 @@ cnaSim:
   /home/qcb-panasas/kaliappa/code/cna/cna_utils/src/cna_sim
 normalGenome:
   /home/qcb-panasas/kaliappa/data/hg19/hg19_24chr.fa
-simTfx: 1
 simReadLen: 100
 simReadCount: 1000000
+tfx:
+  - 100
+  - 75
+  - 50
+  - 25
+  - 0
 
 bwa: /home/qcb-panasas/kaliappa/code/bwa/bwa-0.7.17/bwa
 ref: /home/qcb-panasas/kaliappa/data/hg19/bwa/hg19.fa
@@ -22,14 +27,32 @@ binCounts:
 cbs:
   /home/qcb-panasas/kaliappa/code/smurfseq_scripts/scripts/cnvAnalysis.R
 
+ratioDist:
+  /home/qcb-panasas/kaliappa/code/cna/sim_ploidy_tfx/ploidy/analysis/ratioDist.r
+
 samples:
-  - hg19_p_cn1
-  - hg19_p_cn4
-  - hg19_q_cn1
-  - hg19_q_cn4
-  - hg19_chr1-5_cn1
-  - hg19_chr1-5_cn3
-  - hg19_chr1-5_cn4
-  - hg19_chr1-3_cn1
-  - hg19_chr1-3_cn3
-  - hg19_chr1-3_cn4
+   - hg19_p_cn1
+   - hg19_p_cn4
+   - hg19_q_cn1
+   - hg19_q_cn4
+   - hg19_chr1-5_cn1
+   - hg19_chr1-5_cn3
+   - hg19_chr1-5_cn4
+   - hg19_chr1-3_cn1
+   - hg19_chr1-3_cn3
+   - hg19_chr1-3_cn4
+#  - hg19_tf0_l36_1
+#  - hg19_tf0_l50_1
+#  - hg19_tf0_l70_1
+#  - hg19_tf0_l100_1
+#  - hg19_tf0_l150_1
+#  - hg19_tf0_l36_2
+#  - hg19_tf0_l50_2
+#  - hg19_tf0_l70_2
+#  - hg19_tf0_l100_2
+#  - hg19_tf0_l150_2
+#  - hg19_tf0_l36_3
+#  - hg19_tf0_l50_3
+#  - hg19_tf0_l70_3
+#  - hg19_tf0_l100_3
+#  - hg19_tf0_l150_3
