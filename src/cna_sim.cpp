@@ -231,7 +231,7 @@ print_usage(const string &name) {
   oss << name << " [options]" << endl
       << "\t-i in_file.txt" << endl
       << "\t-c cna_regions.bed (required if TFx > 0.0)" << endl
-      << "\t-t tumor fraction (default: 1.0)" << endl
+      << "\t-t tumor fraction (default: 100)" << endl
       << "\t-n number of reads (default: 1M)" << endl
       << "\t-l read length (default: 100)" << endl
       << "\t-o out_file.txt" << endl
@@ -248,7 +248,7 @@ main (int argc, char *argv[]) {
     string cna_regions;
     size_t n_reads{1000000};
     size_t read_len{100};
-    float tfx{1.0};
+    float tfx{100};
     bool VERBOSE{false};
 
     int opt;
@@ -271,8 +271,8 @@ main (int argc, char *argv[]) {
         throw std::runtime_error(print_usage(argv[0]));
     }
 
-    if (in_file.empty() || (tfx > 0.0 && cna_regions.empty())
-        || tfx > 1 || out_file.empty())
+    if (in_file.empty() || (tfx > 0 && cna_regions.empty())
+        || tfx > 100 || out_file.empty())
       throw std::runtime_error(print_usage(argv[0]));
 
     if (VERBOSE)
@@ -286,7 +286,7 @@ main (int argc, char *argv[]) {
 
     ReadInfo info;
     size_t read_count = 0;
-    const size_t n_tumor_reads = tfx * n_reads;
+    const size_t n_tumor_reads = (tfx/100) * n_reads;
     if (n_tumor_reads > 0) {
       if (VERBOSE)
         cerr << "[SETTING TUMOR CNA REGIONS]" << endl;
