@@ -25,19 +25,20 @@ badBins:
 binCounts:
   /home/qcb-panasas/kaliappa/code/smurfseq_scripts/scripts/getBinCounts.py
 cbs:
-  /home/qcb-panasas/kaliappa/code/smurfseq_scripts/scripts/cnvAnalysis.R
+#  /home/qcb-panasas/kaliappa/code/smurfseq_scripts/scripts/cnvAnalysis.R
+  /home/qcb-panasas/kaliappa/code/cna/sim_ploidy_tfx/ploidy/cnv/cnvAnalysisNoGc.R
 
 ratioDist:
   /home/qcb-panasas/kaliappa/code/cna/sim_ploidy_tfx/ploidy/analysis/ratioDist.r
 
 samples:
-   - hg19_p_cn1
-   - hg19_p_cn4
-   - hg19_q_cn1
-   - hg19_q_cn4
-   - hg19_chr1-5_cn1
-   - hg19_chr1-5_cn3
-   - hg19_chr1-5_cn4
+#    - hg19_p_cn1
+#    - hg19_p_cn4
+#    - hg19_q_cn1
+#    - hg19_q_cn4
+#    - hg19_chr1-5_cn1
+#    - hg19_chr1-5_cn3
+#    - hg19_chr1-5_cn4
    - hg19_chr1-3_cn1
    - hg19_chr1-3_cn3
    - hg19_chr1-3_cn4

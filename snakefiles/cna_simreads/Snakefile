@@ -1,6 +1,6 @@
 rule all:
   input:
-    expand('analysis/{sample}_tf{tfx}_ratioDist.pdf', 
+    expand('cnv/{sample}_tf{tfx}.pdf', 
             sample=config['samples'], tfx=config['tfx'])
 
 rule simReads:
@@ -37,14 +37,14 @@ rule mapReads:
 
 rule removeAmbig:
   input:
-    'mapped_reads/{sample}_tf{tfx}.sam'
+    sam = 'mapped_reads/{sample}_tf{tfx,[0-9]+}.sam'
   output:
     sam = 'mapped_reads/{sample}_tf{tfx}_mq10.sam',
     flagstat = 'flagstat/{sample}_tf{tfx}_mq10_flagstat.txt'
   params:
     mapq = 10
   shell:
-    'samtools view -q {params.mapq} -h -o {output.sam} {input}; '
+    'samtools view -q {params.mapq} -h -o {output.sam} {input.sam}; '
     'samtools flagstat {output.sam} > {output.flagstat}'
 
 rule cnvAnalysis:
@@ -68,11 +68,11 @@ rule cnvAnalysis:
     '{wildcards.sample}_tf{wildcards.tfx}.short.txt '
     '{wildcards.sample}_tf{wildcards.tfx}.pdf cnv/'
 
-rule ratioDist:
-  input:
-    'cnv/{sample}_tf{tfx}.data.txt'
-  output:
-    'analysis/{sample}_tf{tfx}_ratioDist.pdf'
-  shell:
-    '{config[ratioDist]} {input} {wildcards.sample}_tf{wildcards.tfx}; '
-    'mv {wildcards.sample}_tf{wildcards.tfx}_ratioDist.pdf analysis/ '
+# rule ratioDist:
+#   input:
+#     'cnv/{sample}_tf{tfx}.data.txt'
+#   output:
+#     'analysis/{sample}_tf{tfx}_ratioDist.pdf'
+#   shell:
+#     '{config[ratioDist]} {input} {wildcards.sample}_tf{wildcards.tfx}; '
+#     'mv {wildcards.sample}_tf{wildcards.tfx}_ratioDist.pdf analysis/ '
