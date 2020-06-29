@@ -1,0 +1,24 @@
+readsDir: /scratch2/kaliappa/cnv/cnv_bounds/test
+read1Suffix: _R1_001.fastq.gz
+read2Suffix: _R2_001.fastq.gz
+
+fastqc: /scratch2/kaliappa/tools/fastqc/FastQC/fastqc
+
+bwa: /staging/as/kaliappa/bwa/bwa-0.7.17/bwa
+ref: /home/cmb-panasas2/kaliappa/data/hg19/bwa/hg19.fa
+
+mapStats: $REPO_PATH/scripts/mapStats.py 
+
+chromSizes: 
+  /staging/as/kaliappa/smurf/smurfseq_scripts/data/hg19.chrom.sizes
+binBounds: 
+  /staging/as/kaliappa/smurf/smurfseq_scripts/data/bins_5k_hg19.bed
+gc: 
+  /staging/as/kaliappa/smurf/smurfseq_scripts/data/bins_5k_hg19_gc.txt
+badBins: 
+  /staging/as/kaliappa/smurf/smurfseq_scripts/data/bins_5k_hg19_exclude.txt
+binCounts:
+  /staging/as/kaliappa/tmp/scripts/getBinCountsBam.py
+cbs:
+  /staging/as/kaliappa/smurf/smurfseq_scripts/scripts/cnvAnalysis.R
+

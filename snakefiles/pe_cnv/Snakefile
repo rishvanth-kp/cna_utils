@@ -1,0 +1,130 @@
+# Copyright (C) 2020 Rishvanth Prabakar
+#
+# Authors: Rish Prabakar
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+from glob import glob
+from numpy import unique
+
+reads = glob('{}/*'.format(config['readsDir']))
+samples = []
+for i in reads:
+  sampleName = i.replace('{}/'.format(config['readsDir']), '')
+  sampleName = sampleName.replace('{}'.format(config['read1Suffix']), '')
+  sampleName = sampleName.replace('{}'.format(config['read2Suffix']), '')
+  samples.append(sampleName)
+
+samples = unique(samples)
+print(samples)
+
+rule all:
+  input:
+    expand('fastqc/{sample}_R1_001_fastqc.html', sample=samples)
+#     expand('cnv/{sample}.pdf', sample=config['samples'])
+
+rule fastqc:
+  input:
+    r1 = config['readsDir'] + '/{sample}_R1_001.fastq.gz',
+    r2 = config['readsDir'] + '/{sample}_R2_001.fastq.gz'
+  output:
+    o1 = 'fastqc/{sample}_R1_001_fastqc.html',
+    o2 = 'fastqc/{sample}_R2_001_fastqc.html'
+  params:
+    'fastqc'
+  shell:
+    '{config[fastqc]} {input.r1} {input.r2} -o {params}'
+
+# rule mapReads:
+#   input:
+#     ref = config['ref'],
+#     r1 = 'reads/{sample}_R1_001.fastq.gz',
+#     r2 = 'reads/{sample}_R2_001.fastq.gz'
+#   output:
+#     sam = temp('mapped_reads/{sample}.sam'),
+#     flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
+#   threads: 15
+#   log:
+#     'logs/{sample}_bwa.log'
+#   benchmark:
+#     'logs/{sample}_bwa.benchmark'
+#   shell:
+#     '{config[bwa]} mem -t {threads} {input.ref} {input.r1} {input.r2} '
+#     '1> {output.sam} 2> {log}; '
+#     'samtools flagstat {output.sam} > {output.flagstat}'
+# 
+# rule sortReads:
+#   input:
+#     'mapped_reads/{sample}.sam'
+#   output:
+#     temp('mapped_reads/{sample}_sorted.bam')
+#   threads: 15
+#   shell:
+#     'samtools sort -@ {threads} -o {output} {input}'
+# 
+# rule removeDuplicates:
+#   input:
+#     'mapped_reads/{sample}_sorted.bam'
+#   output:
+#     bam = temp('mapped_reads/{sample}_rmdup.bam'),
+#     flagstat = 'flagstat/{sample}_rmdup_flagstat.txt'
+#   shell:
+#     'samtools rmdup {input} {output.bam}; '
+#     'samtools flagstat {output.bam} > {output.flagstat}'
+# 
+# rule removeAmbig:
+#   input:
+#     'mapped_reads/{sample}_rmdup.bam'
+#   output:
+#     bam = temp('mapped_reads/{sample}_mq10.bam'),
+#     flagstat = 'flagstat/{sample}_mq10_flagstat.txt'
+#   params:
+#     mapq = 10
+#   shell:
+#     'samtools view -q {params.mapq} -h -o {output.bam} {input}; '
+#     'samtools flagstat {output.bam} > {output.flagstat}'
+#     
+# rule removeMates:
+#   input: 
+#     'mapped_reads/{sample}_mq10.bam'
+#   output:
+#     bam = 'mapped_reads/{sample}_fwd.bam',
+#     flagstat = 'flagstat/{sample}_fwd_flagstat.txt'
+#   shell:
+#     'samtools view -f 0x40 -o {output.bam} {input}; '
+#     'samtools flagstat {output.bam} > {output.flagstat}'
+# 
+# rule printMapStats:
+#   input:
+#     m = 'flagstat/{sample}_mapped_flagstat.txt',
+#     u = 'flagstat/{sample}_fwd_flagstat.txt'
+#   output:
+#     'map_stats/{sample}_stats.txt'
+#   shell:
+#     '{config[mapStats]} -s {wildcards.sample} -m {input.m} '
+#     '-u {input.u} > {output}'
+# 
+# rule cnvAnalysis:
+#   input:
+#     bam = 'mapped_reads/{sample}_fwd.bam',
+#     chromSizes = config['chromSizes'],
+#     binBounds = config['binBounds'],
+#     gc = config['gc'],
+#     badBins = config['badBins']
+#   output:
+#     counts = 'cnv/{sample}_bincounts.bed',
+#     stats = 'cnv/{sample}_stats.txt',
+#     cnvPlot = 'cnv/{sample}.pdf'
+#   shell:
+#     '{config[binCounts]} -i {input.bam} -c {input.chromSizes} '
+#     '-b {input.binBounds} -o {output.counts} -s {output.stats}; '
+#     '{config[cbs]} {output.counts} {wildcards.sample} {input.gc} '
+#     '{input.badBins}'
