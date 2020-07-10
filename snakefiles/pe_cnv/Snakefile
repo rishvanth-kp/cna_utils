@@ -28,7 +28,8 @@ print(samples)
 
 rule all:
   input:
-    expand('fastqc/{sample}_R1_001_fastqc.html', sample=samples)
+    expand('fastqc/{sample}_R1_001_fastqc.html', sample=samples),
+    expand('mapped_reads/{sample}_rmdup.sam', sample=samples),
 #     expand('cnv/{sample}.pdf', sample=config['samples'])
 
 rule fastqc:
@@ -39,28 +40,89 @@ rule fastqc:
     o1 = 'fastqc/{sample}_R1_001_fastqc.html',
     o2 = 'fastqc/{sample}_R2_001_fastqc.html'
   params:
-    'fastqc'
+    outDir = 'fastqc'
   shell:
-    '{config[fastqc]} {input.r1} {input.r2} -o {params}'
+    '{config[fastqc]} {input.r1} {input.r2} -o {params.outDir}'
 
-# rule mapReads:
+# rule trimAdapters:
+#   input:
+#     r1 = config['readsDir'] + '/{sample}_R1_001.fastq.gz',
+#     r2 = config['readsDir'] + '/{sample}_R2_001.fastq.gz'
+#   output:
+#     'trimmed_reads/{sample}_val_1.fq.gz',
+#     'trimmed_reads/{sample}_val_2.fq.gz'
+#   params:
+#     outDir = 'trimmed_reads',
+#     suffix = '{sample}',
+#     minPhred = config['minPhred'],
+#     minOverlap = config['minOverlap']
+#   shell:
+#     'trim_galore --paired --quality {params.minPhred} --stringency {params.minOverlap} '
+#     '--basename {params.suffix} --output_dir {params.outDir} {input.r1} {input.r2}'
+
+rule mapReads:
+  input:
+    ref = config['ref'],
+    r1 = 'reads/{sample}_R1_001.fastq.gz',
+    r2 = 'reads/{sample}_R2_001.fastq.gz'
+  output:
+    sam = 'mapped_reads/{sample}.sam',
+    flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
+  threads: 15
+  log:
+    'logs/{sample}_bwa.log'
+  benchmark:
+    'logs/{sample}_bwa.benchmark'
+  shell:
+    '{config[bwa]} mem -t {threads} {input.ref} {input.r1} {input.r2} '
+    '1> {output.sam} 2> {log}; '
+    'samtools flagstat {output.sam} > {output.flagstat}'
+
+# rule mapTrimmedReads:
 #   input:
 #     ref = config['ref'],
-#     r1 = 'reads/{sample}_R1_001.fastq.gz',
-#     r2 = 'reads/{sample}_R2_001.fastq.gz'
+#     r1 = 'trimmed_reads/{sample}_val_1.fq.gz',
+#     r2 = 'trimmed_reads/{sample}_val_1.fq.gz'
 #   output:
-#     sam = temp('mapped_reads/{sample}.sam'),
-#     flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
+#     sam = 'mapped_reads/{sample}_trimmed.sam',
+#     flagstat = 'flagstat/{sample}_mapped_trimmed_flagstat.txt'
 #   threads: 15
 #   log:
-#     'logs/{sample}_bwa.log'
+#     'logs/{sample}_bwa_trimmed.log'
 #   benchmark:
-#     'logs/{sample}_bwa.benchmark'
+#     'logs/{sample}_bwa_trimmed.benchmark'
 #   shell:
 #     '{config[bwa]} mem -t {threads} {input.ref} {input.r1} {input.r2} '
 #     '1> {output.sam} 2> {log}; '
 #     'samtools flagstat {output.sam} > {output.flagstat}'
-# 
+
+
+rule postProcessReads:
+  input:
+    'mapped_reads/{sample}.sam'
+  output:
+    sortSam = 'mapped_reads/{sample}_sort.sam',
+    rmdupSam = 'mapped_reads/{sample}_rmdup.sam',
+    flagstat = 'flagstat/{sample}_rmdup_flagstat.txt'
+  threads: 15
+  shell:
+    'samtools sort -@ {threads} -o {output.sortSam} {input}; '
+    'samtools rmdup {output.sortSam} {output.rmdupSam}; '
+    'samtools flagstat {output.rmdupSam} > {output.flagstat}'
+
+# rule postProcessTrimmedReads:
+#   input:
+#     'mapped_reads/{sample}_trimmed.sam'
+#   output:
+#     sortSam = 'mapped_reads/{sample}_trimmed_sort.sam',
+#     rmdupSam = 'mapped_reads/{sample}_trimmed_rmdup.sam',
+#     flagstat = 'flagstat/{sample}_trimmed_rmdup_flagstat.txt'
+#   threads: 15
+#   shell:
+#     'samtools sort -@ {threads} -o {output.sortSam} {input}; '
+#     'samtools rmdup {output.sortSam} {output.rmdupSam}; '
+#     'samtools flagstat {output.rmdupSam} > {output.flagstat}'
+
 # rule sortReads:
 #   input:
 #     'mapped_reads/{sample}.sam'

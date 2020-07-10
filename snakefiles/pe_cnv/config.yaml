@@ -1,13 +1,14 @@
-readsDir: /scratch2/kaliappa/cnv/cnv_bounds/test
+readsDir: /scratch2/kaliappa/cnv/cnv_bounds/cfdna/reads
 read1Suffix: _R1_001.fastq.gz
 read2Suffix: _R2_001.fastq.gz
 
 fastqc: /scratch2/kaliappa/tools/fastqc/FastQC/fastqc
 
-bwa: /staging/as/kaliappa/bwa/bwa-0.7.17/bwa
-ref: /home/cmb-panasas2/kaliappa/data/hg19/bwa/hg19.fa
+minPhred: 20
+minOverlap: 3
 
-mapStats: $REPO_PATH/scripts/mapStats.py 
+bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa
+ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
 
 chromSizes: 
   /staging/as/kaliappa/smurf/smurfseq_scripts/data/hg19.chrom.sizes
