@@ -29,7 +29,7 @@ print(samples)
 rule all:
   input:
     expand('fastqc/{sample}_R1_001_fastqc.html', sample=samples),
-    expand('mapped_reads/{sample}_rmdup.sam', sample=samples),
+    expand('mapped_reads/{sample}_rmdup.sam', sample=samples)
 #     expand('cnv/{sample}.pdf', sample=config['samples'])
 
 rule fastqc:
@@ -74,7 +74,7 @@ rule mapReads:
   benchmark:
     'logs/{sample}_bwa.benchmark'
   shell:
-    '{config[bwa]} mem -t {threads} {input.ref} {input.r1} {input.r2} '
+    '{config[bwa]} mem -t {threads} {input.ref} {input.r1} '
     '1> {output.sam} 2> {log}; '
     'samtools flagstat {output.sam} > {output.flagstat}'
 
@@ -107,7 +107,7 @@ rule postProcessReads:
   threads: 15
   shell:
     'samtools sort -@ {threads} -o {output.sortSam} {input}; '
-    'samtools rmdup {output.sortSam} {output.rmdupSam}; '
+    'samtools rmdup -s {output.sortSam} {output.rmdupSam}; '
     'samtools flagstat {output.rmdupSam} > {output.flagstat}'
 
 # rule postProcessTrimmedReads:

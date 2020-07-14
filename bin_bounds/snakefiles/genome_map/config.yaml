@@ -1,0 +1,10 @@
+readsDir: /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/reads
+readSuffix: .fa
+
+nThreads: 15
+
+bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa
+ref: /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/genome/hg19.fa
+
+minMapq: 30
+bam2good: /scratch2/kaliappa/cnv/cna_utils/bin_bounds/bam2goodZones.py

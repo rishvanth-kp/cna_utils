@@ -19,14 +19,24 @@ import sys, argparse
 def readGenome(genomeFile):
     genome = []
     genomeLen = 0
+    first = True
+    chrName = ''
+    chrSeq = ''
     for line in open(genomeFile):
         line = line.strip()
         if (line[0] == '>'):
+            if (not first):
+                genome.append([chrName, chrSeq])
+                genomeLen += len(chrSeq)
             chrName = line[1:]
-            genome.append([chrName, ''])
+            chrSeq = ''
+            first = False
         else:
-            genome[-1][1] += line
-            genomeLen += len(line)
+            chrSeq += line
+
+    genome.append([chrName, chrSeq])
+    genomeLen += len(chrSeq)
+
     return genome, genomeLen
 
 
@@ -66,7 +76,7 @@ def main():
                 fileCount += 1
             readName = '%s:%d' % (chrs[0], i)
             readSeq = chrs[1][i:i+args.readLen]
-            print('%s\n%s' % (readName, readSeq), file = out)
+            print('>%s\n%s' % (readName, readSeq), file = out)
 
 
 if __name__ == '__main__':

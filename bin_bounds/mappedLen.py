@@ -31,7 +31,7 @@ def main():
     totalMapped = 0  
     mappedReads = pysam.AlignmentFile(args.samFile, 'r')
     for read in mappedReads:
-        if read.is_read1 and read.mapping_quality >= args.minMapq:
+        if read.mapping_quality >= args.minMapq:
             totalMapped += 1
             alnLen = read.query_alignment_length
             if alnLen in alignmentLen:

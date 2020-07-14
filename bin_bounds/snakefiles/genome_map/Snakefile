@@ -1,0 +1,59 @@
+# Copyright (C) 2020 Rishvanth Prabakar
+#
+# Authors: Rish Prabakar
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+from glob import glob
+from numpy import unique
+
+reads = glob('{}/*'.format(config['readsDir']))
+samples = []
+for i in reads:
+  sampleName = i.replace('{}/'.format(config['readsDir']), '')
+  sampleName = sampleName.replace('{}'.format(config['readSuffix']), '')
+  samples.append(sampleName)
+
+samples = unique(samples)
+print(samples)
+
+rule all:
+  input:
+    expand('goodzones/{sample}_goodzones.bed', sample=samples)
+
+rule mapReads:
+  input:
+    ref = config['ref'],
+    r1 = 'reads/{sample}' + config['readSuffix'],
+  output:
+    sam = temp('mapped_reads/{sample}.sam'),
+    bam = 'mapped_reads/{sample}.bam',
+    flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
+  threads: config['nThreads']
+  log:
+    'logs/{sample}_bwa.log'
+  benchmark:
+    'logs/{sample}_bwa.benchmark'
+  shell:
+    '{config[bwa]} mem -t {threads} {input.ref} {input.r1} '
+    '1> {output.sam} 2> {log}; '
+    'samtools flagstat {output.sam} > {output.flagstat}; '
+    'samtools view -b -@ {threads} -o {output.bam} {output.sam};'
+
+rule findGoodzones:
+  input:
+    'mapped_reads/{sample}.bam'
+  output:
+    'goodzones/{sample}_goodzones.bed'
+  params:
+    minMapq = config['minMapq']
+  shell:
+    '{config[bam2good]} -i {input} -q {params.minMapq} -o {output}'
