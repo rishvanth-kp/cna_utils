@@ -116,7 +116,10 @@ def main():
                 offset += 1
 
             binEnd =  goodZones[k][offset][0] + mapsRemaining
+            goodZones[k][offset][0] += mapsRemaining
             goodZones[k][offset][1] -= mapsRemaining
+            assert (binEnd - binStart) >= math.floor(mapsPerBin), (
+                'Bin too small')
             assert goodZones[k][offset][1] >= 0, 'Negaive goodZone'
             print('%s\t%d\t%d' % (k, binStart, binEnd), file = out)
             binStart = binEnd
