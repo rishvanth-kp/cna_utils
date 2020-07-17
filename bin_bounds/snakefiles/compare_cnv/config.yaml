@@ -1,0 +1,32 @@
+readsDir: /scratch2/kaliappa/cnv/cnv_bounds/ctc/reads
+read1Suffix: _R1_001.fastq.gz
+read2Suffix: _R2_001.fastq.gz
+
+bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa
+ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
+
+nThreads: 16
+
+minMapq: 30
+
+picard: /scratch2/kaliappa/tools/picard/picard.jar
+
+chromSizes:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/data/hg19.chrom.sizes
+binCounts:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/scripts/getBinCounts.py
+cbs:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/scripts/cnvAnalysis.R
+
+badBins:
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bins_5k_hg19_exclude.txt
+
+oldBinBounds:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/data/bins_5k_hg19.bed
+oldGc:
+  /scratch2/kaliappa/cfdna/cfDNA_utils/data/bins_5k_hg19_gc.txt
+
+newBinBounds:
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/hg19_5k_bin_bounds.bed
+newGc:
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/hg19_5k_gc.bed
