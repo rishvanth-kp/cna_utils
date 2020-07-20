@@ -11,6 +11,11 @@ minMapq: 30
 
 picard: /scratch2/kaliappa/tools/picard/picard.jar
 
+dzBed:
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/hg19_150bp_dz_repeat.bed
+filterDz:
+  /scratch2/kaliappa/cnv/cna_utils/bin_bounds/filterDeadzone.py
+
 chromSizes:
   /scratch2/kaliappa/cfdna/cfDNA_utils/data/hg19.chrom.sizes
 binCounts:
@@ -27,6 +32,6 @@ oldGc:
   /scratch2/kaliappa/cfdna/cfDNA_utils/data/bins_5k_hg19_gc.txt
 
 newBinBounds:
-  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/hg19_5k_bin_bounds.bed
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds/gz_repeat/hg19_5k_bin_bounds.bed
 newGc:
-  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/hg19_5k_gc.bed
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds/gz_repeat/hg19_5k_gc.txt

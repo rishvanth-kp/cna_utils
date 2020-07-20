@@ -87,9 +87,21 @@ rule oldCna:
     '{config[cbs]} {output.counts} {params.sampleName} {params.gc} '
     '{params.badBins} {params.outDir}'
 
+rule filterDeadzone:
+  input:
+    'mapped_reads_se/{sample}_unique.sam'
+  output:
+    'mapped_reads_se/{sample}_gz.sam'
+  log:
+    'logs/{sample}_filter_dz.log'
+  params:
+    dzBed = config['dzBed']
+  shell:
+    '{config[filterDz]} -i {input} -b {params.dzBed} -o {output} -v 2> {log}'
+
 rule newCna:
   input:
-    sam = 'mapped_reads_se/{sample}_unique.sam',
+    sam = 'mapped_reads_se/{sample}_gz.sam',
   output:
     counts = 'cna_new_se/{sample}_bincounts.bed',
     stats = 'cna_new_se/{sample}_stats.txt',

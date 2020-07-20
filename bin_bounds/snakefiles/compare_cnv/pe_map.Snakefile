@@ -28,7 +28,7 @@ samples = unique(samples)
 rule all:
   input:
     expand('insert_sz/{sample}_insert_sz.pdf', sample=samples),
-    expand('cna_old/{sample}.pdf', sample=samples),
+#     expand('cna_old/{sample}.pdf', sample=samples),
     expand('cna_new/{sample}.pdf', sample=samples)
 
 rule mapReads:
@@ -73,7 +73,7 @@ rule postProcessMaps:
     'samtools view -f 0x40 -h -@ {threads} -o {output.fwdSam} '
     '{output.uniqBam}; '
     'samtools flagstat {output.fwdSam} > {output.fwdFstat}'
-    
+
 rule insertSz:
   input:
     'mapped_reads/{sample}_unique.bam'
@@ -108,9 +108,21 @@ rule oldCna:
     '{config[cbs]} {output.counts} {params.sampleName} {params.gc} '
     '{params.badBins} {params.outDir}'
 
+rule filterDeadzone:
+  input:
+    'mapped_reads/{sample}_fwd.sam'
+  output:
+    'mapped_reads/{sample}_gz.sam'
+  log:
+    'logs/{sample}_filter_dz.log'
+  params:
+    dzBed = config['dzBed']
+  shell:
+    '{config[filterDz]} -i {input} -b {params.dzBed} -o {output} -v 2> {log}'
+
 rule newCna:
   input:
-    sam = 'mapped_reads/{sample}_fwd.sam',
+    sam = 'mapped_reads/{sample}_gz.sam',
   output:
     counts = 'cna_new/{sample}_bincounts.bed',
     stats = 'cna_new/{sample}_stats.txt',
