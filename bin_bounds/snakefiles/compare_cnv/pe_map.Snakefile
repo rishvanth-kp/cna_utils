@@ -24,12 +24,15 @@ for i in reads:
   samples.append(sampleName)
 
 samples = unique(samples)
+print(samples)
 
 rule all:
   input:
     expand('insert_sz/{sample}_insert_sz.pdf', sample=samples),
-#     expand('cna_old/{sample}.pdf', sample=samples),
-    expand('cna_new/{sample}.pdf', sample=samples)
+    expand('cna_old/{sample}_5k.pdf', sample=samples),
+    expand('cna_new/{sample}_5k.pdf', sample=samples),
+    expand('cna_old/{sample}_20k.pdf', sample=samples),
+    expand('cna_new/{sample}_20k.pdf', sample=samples)
 
 rule mapReads:
   input:
@@ -37,7 +40,7 @@ rule mapReads:
     r1 = config['readsDir'] + '/{sample}_R1_001.fastq.gz',
     r2 = config['readsDir'] + '/{sample}_R2_001.fastq.gz'
   output:
-    sam = temp('mapped_reads/{sample}.sam'),
+    sam = 'mapped_reads/{sample}.sam',
     flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
   threads: config['nThreads']
   log:
@@ -49,12 +52,39 @@ rule mapReads:
     '1> {output.sam} 2> {log}; '
     'samtools flagstat {output.sam} > {output.flagstat}'
 
+# rule postProcessMaps:
+#   input:
+#     'mapped_reads/{sample}.sam'
+#   output:
+#     sortBam = 'mapped_reads/{sample}_sorted.bam',
+#     rmdupBam = 'mapped_reads/{sample}_rmdup.bam',
+#     rmdupFstat = 'flagstat/{sample}_rmdup_flagstat.txt',
+#     uniqBam = 'mapped_reads/{sample}_unique.bam',
+#     uniqFstat = 'flagstat/{sample}_unique_flagstat.txt',
+#     fwdSam = 'mapped_reads/{sample}_fwd.sam',
+#     fwdFstat = 'flagstat/{sample}_fwd_flagstat.txt'
+#   params:
+#     mapq = config['minMapq']
+#   threads: config['nThreads']
+#   shell:
+#     'samtools sort -@ {threads} -o {output.sortBam} {input}; '
+#     'samtools rmdup {output.sortBam} {output.rmdupBam}; '
+#     'samtools flagstat {output.rmdupBam} > {output.rmdupFstat}; '
+#     'samtools view -q {params.mapq} -@ {threads} -o {output.uniqBam} '
+#     '{output.rmdupBam}; '
+#     'samtools flagstat {output.uniqBam} > {output.uniqFstat}; '
+#     'samtools view -f 0x40 -h -@ {threads} -o {output.fwdSam} '
+#     '{output.uniqBam}; '
+#     'samtools flagstat {output.fwdSam} > {output.fwdFstat}'
+
 rule postProcessMaps:
   input:
     'mapped_reads/{sample}.sam'
   output:
-    sortBam = 'mapped_reads/{sample}_sorted.bam',
-    rmdupBam = 'mapped_reads/{sample}_rmdup.bam',
+    collateBam = temp('mapped_reads/{sample}_coallate.bam'),
+    fixmateBam = temp('mapped_reads/{sample}_fixmate.bam'),
+    sortedBam = temp('mapped_reads/{sample}_sorted.bam'),
+    rmdupBam = temp('mapped_reads/{sample}_rmdup.bam'),
     rmdupFstat = 'flagstat/{sample}_rmdup_flagstat.txt',
     uniqBam = 'mapped_reads/{sample}_unique.bam',
     uniqFstat = 'flagstat/{sample}_unique_flagstat.txt',
@@ -64,13 +94,16 @@ rule postProcessMaps:
     mapq = config['minMapq']
   threads: config['nThreads']
   shell:
-    'samtools sort -@ {threads} -o {output.sortBam} {input}; '
-    'samtools rmdup {output.sortBam} {output.rmdupBam}; '
+    'samtools collate -@ {threads} -o {output.collateBam} {input}; '
+    'samtools fixmate -@ {threads} -m {output.collateBam} '
+    '{output.fixmateBam}; '
+    'samtools sort -@ {threads} -o {output.sortedBam} {output.fixmateBam}; '
+    'samtools markdup -@ {threads} -r {output.sortedBam} {output.rmdupBam}; '
     'samtools flagstat {output.rmdupBam} > {output.rmdupFstat}; '
-    'samtools view -q {params.mapq} -@ {threads} -o {output.uniqBam} '
-    '{output.rmdupBam}; '
+    'samtools view -@ {threads} -q {params.mapq} -F 0x800 '
+    '-o {output.uniqBam} {output.rmdupBam};'
     'samtools flagstat {output.uniqBam} > {output.uniqFstat}; '
-    'samtools view -f 0x40 -h -@ {threads} -o {output.fwdSam} '
+    'samtools view -@ {threads} -f 0x40 -h -o {output.fwdSam} '
     '{output.uniqBam}; '
     'samtools flagstat {output.fwdSam} > {output.fwdFstat}'
 
@@ -92,27 +125,36 @@ rule oldCna:
   input:
     sam = 'mapped_reads/{sample}_fwd.sam',
   output:
-    counts = 'cna_old/{sample}_bincounts.bed',
-    stats = 'cna_old/{sample}_stats.txt',
-    cnaPlot = 'cna_old/{sample}.pdf'
+    counts5k = 'cna_old/{sample}_5k_bincounts.bed',
+    stats5k = 'cna_old/{sample}_5k_stats.txt',
+    cnaPlot5k = 'cna_old/{sample}_5k.pdf',
+    counts20k = 'cna_old/{sample}_20k_bincounts.bed',
+    stats20k = 'cna_old/{sample}_20k_stats.txt',
+    cnaPlot20k = 'cna_old/{sample}_20k.pdf'
   params:
-    sampleName = '{sample}',
+    sampleName5k = '{sample}_5k',
+    sampleName20k = '{sample}_20k',
     chromSizes = config['chromSizes'],
-    binBounds = config['oldBinBounds'],
-    gc = config['oldGc'],
-    badBins = config['badBins'],
+    binBounds5k = config['oldBinBounds5k'],
+    gc5k = config['oldGc5k'],
+    binBounds20k = config['oldBinBounds20k'],
+    gc20k = config['oldGc20k'],
     outDir = 'cna_old'
   shell:
     '{config[binCounts]} -i {input.sam} -c {params.chromSizes} '
-    '-b {params.binBounds} -o {output.counts} -s {output.stats}; '
-    '{config[cbs]} {output.counts} {params.sampleName} {params.gc} '
-    '{params.badBins} {params.outDir}'
+    '-b {params.binBounds5k} -o {output.counts5k} -s {output.stats5k}; '
+    '{config[cbs]} {output.counts5k} {params.sampleName5k} {params.gc5k} '
+    '{params.outDir}; '
+    '{config[binCounts]} -i {input.sam} -c {params.chromSizes} '
+    '-b {params.binBounds20k} -o {output.counts20k} -s {output.stats20k}; '
+    '{config[cbs]} {output.counts20k} {params.sampleName20k} {params.gc20k} '
+    '{params.outDir}'
 
 rule filterDeadzone:
   input:
     'mapped_reads/{sample}_fwd.sam'
   output:
-    'mapped_reads/{sample}_gz.sam'
+    temp('mapped_reads/{sample}_gz.sam')
   log:
     'logs/{sample}_filter_dz.log'
   params:
@@ -124,18 +166,27 @@ rule newCna:
   input:
     sam = 'mapped_reads/{sample}_gz.sam',
   output:
-    counts = 'cna_new/{sample}_bincounts.bed',
-    stats = 'cna_new/{sample}_stats.txt',
-    cnaPlot = 'cna_new/{sample}.pdf'
+    counts5k = 'cna_new/{sample}_5k_bincounts.bed',
+    stats5k = 'cna_new/{sample}_5k_stats.txt',
+    cnaPlot5k = 'cna_new/{sample}_5k.pdf',
+    counts20k = 'cna_new/{sample}_20k_bincounts.bed',
+    stats20k = 'cna_new/{sample}_20k_stats.txt',
+    cnaPlot20k = 'cna_new/{sample}_20k.pdf'
   params:
-    sampleName = '{sample}',
+    sampleName5k = '{sample}_5k',
+    sampleName20k = '{sample}_20k',
     chromSizes = config['chromSizes'],
-    binBounds = config['newBinBounds'],
-    gc = config['newGc'],
-    badBins = config['badBins'],
+    binBounds5k = config['newBinBounds5k'],
+    gc5k = config['newGc5k'],
+    binBounds20k = config['newBinBounds20k'],
+    gc20k = config['newGc20k'],
     outDir = 'cna_new'
   shell:
     '{config[binCounts]} -i {input.sam} -c {params.chromSizes} '
-    '-b {params.binBounds} -o {output.counts} -s {output.stats}; '
-    '{config[cbs]} {output.counts} {params.sampleName} {params.gc} '
-    '{params.badBins} {params.outDir}'
+    '-b {params.binBounds5k} -o {output.counts5k} -s {output.stats5k}; '
+    '{config[cbs]} {output.counts5k} {params.sampleName5k} {params.gc5k} '
+    '{params.outDir}; '
+    '{config[binCounts]} -i {input.sam} -c {params.chromSizes} '
+    '-b {params.binBounds20k} -o {output.counts20k} -s {output.stats20k}; '
+    '{config[cbs]} {output.counts20k} {params.sampleName20k} {params.gc20k} '
+    '{params.outDir}'
