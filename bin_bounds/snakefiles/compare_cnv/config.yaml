@@ -1,4 +1,4 @@
-readsDir: /scratch2/kaliappa/cnv/cnv_bounds/ctc/reads
+readsDir: /scratch2/kaliappa/cnv/cnv_bounds/pc_ctc/reads
 read1Suffix: _R1_001.fastq.gz
 read2Suffix: _R2_001.fastq.gz
 
@@ -14,8 +14,8 @@ picard: /scratch2/kaliappa/tools/picard/picard.jar
 filterDz:
   /scratch2/kaliappa/cnv/cna_utils/bin_bounds/filterDeadzone.py
 dzBed:
-  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_150bp_dz_dac_enc.bed
-#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_150bp_dz_enc.bed
+#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_150bp_dz_dac_enc.bed
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_150bp_dz_enc.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac/hg19_150bp_dz_dac.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz/hg19_150bp_dz.bed
 
@@ -36,26 +36,26 @@ oldGc20k:
   /scratch2/kaliappa/cfdna/cfDNA_utils/data/bins_20k_hg19_gc.txt
 
 newBinBounds5k:
-  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_5k_gz_dac_enc_bins.bed
-#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_5k_gz_enc_bins.bed
+#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_5k_gz_dac_enc_bins.bed
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_5k_gz_enc_bins.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac/hg19_5k_gz_dac_bins.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz/hg19_5k_gz_bins.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/bwa/hg19_5k_bin_bounds.bed
 newGc5k:
-  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_5k_gz_dac_enc_gc.bed
-#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_5k_gz_enc_gc.bed
+#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_5k_gz_dac_enc_gc.bed
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_5k_gz_enc_gc.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac/hg19_5k_gz_dac_gc.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz/hg19_5k_gz_gc.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/bwa/hg19_5k_gc.bed
 newBinBounds20k:
-  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_20k_gz_dac_enc_bins.bed
-#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_20k_gz_enc_bins.bed
+#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_20k_gz_dac_enc_bins.bed
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_20k_gz_enc_bins.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac/hg19_20k_gz_dac_bins.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz/hg19_20k_gz_bins.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/bwa/hg19_20k_bin_bounds.bed
 newGc20k:
-  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_20k_gz_dac_enc_gc.bed
-#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_20k_gz_enc_gc.bed
+#  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_20k_gz_dac_enc_gc.bed
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_20k_gz_enc_gc.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac/hg19_20k_gz_dac_gc.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz/hg19_20k_gz_gc.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/bwa/hg19_20k_gc.bed
