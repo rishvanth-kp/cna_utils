@@ -14,6 +14,10 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # General Public License for more details.
 
+n.gt <- function(x, gt.val) {
+  return (sum(x > gt.val))
+}
+
 main <- function() {
 
   args <- commandArgs(trailingOnly = TRUE)
@@ -67,8 +71,13 @@ main <- function() {
 
   ## Designate as a bad bin if the median of the ratio over all the samples
   ## is above the cutoff
-  ratios$median <- apply(as.matrix(ratios[, 4:ncol(ratios)]), 1, median)
-  bad.bins <- ratios[ratios$median >= cut.off, 1:3]
+  # ratios$median <- apply(as.matrix(ratios[, 4:ncol(ratios)]), 1,  median)
+  # bad.bins <- ratios[ratios$median >= cut.off, 1:3]
+  ratios$median <- apply(as.matrix(ratios[, 4:ncol(ratios)]), 1, n.gt,
+                          gt.val = cut.off)
+  bad.bins <- ratios[ratios$median >= (n.samples/2), 1:3]
+
+
   write.table(bad.bins, outfile, sep = "\t", quote = FALSE,
               col.names = FALSE)
 }

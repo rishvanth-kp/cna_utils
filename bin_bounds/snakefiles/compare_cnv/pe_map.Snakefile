@@ -154,7 +154,7 @@ rule filterDeadzone:
   input:
     'mapped_reads/{sample}_fwd.sam'
   output:
-    temp('mapped_reads/{sample}_gz.sam')
+    'mapped_reads/{sample}_gz.sam'
   log:
     'logs/{sample}_filter_dz.log'
   params:
@@ -175,18 +175,26 @@ rule newCna:
   params:
     sampleName5k = '{sample}_5k',
     sampleName20k = '{sample}_20k',
+    sampleName5kNoBad = '{sample}_5k_no_bad',
+    sampleName20kNoBad = '{sample}_20k_no_bad',
     chromSizes = config['chromSizes'],
     binBounds5k = config['newBinBounds5k'],
     gc5k = config['newGc5k'],
+    badBins5k = config['badBins5k'],
     binBounds20k = config['newBinBounds20k'],
     gc20k = config['newGc20k'],
+    badBins20k = config['badBins20k'],
     outDir = 'cna_new'
   shell:
     '{config[binCounts]} -i {input.sam} -c {params.chromSizes} '
     '-b {params.binBounds5k} -o {output.counts5k} -s {output.stats5k}; '
-    '{config[cbs]} {output.counts5k} {params.sampleName5k} {params.gc5k} '
+    '{config[cbsNoBad]} {output.counts5k} {params.sampleName5k} {params.gc5k} '
     '{params.outDir}; '
+    '{config[cbs]} {output.counts5k} {params.sampleName5kNoBad} {params.gc5k} '
+    '{params.badBins5k} {params.outDir}; '
     '{config[binCounts]} -i {input.sam} -c {params.chromSizes} '
     '-b {params.binBounds20k} -o {output.counts20k} -s {output.stats20k}; '
-    '{config[cbs]} {output.counts20k} {params.sampleName20k} {params.gc20k} '
-    '{params.outDir}'
+    '{config[cbsNoBad]} {output.counts20k} {params.sampleName20k} {params.gc20k} '
+    '{params.outDir}; '
+    '{config[cbs]} {output.counts20k} {params.sampleName20kNoBad} {params.gc20k} '
+    '{params.badBins20k} {params.outDir}'
