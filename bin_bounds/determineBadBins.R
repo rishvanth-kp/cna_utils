@@ -68,6 +68,7 @@ main <- function() {
   ## cutoff of calling bad-bins is based on the p-value corresponding
   ## to 1/(number of bins)
   cut.off <- abs(qnorm(1 / n.bins))
+  # cut.off <- 2
 
   ## Designate as a bad bin if the median of the ratio over all the samples
   ## is above the cutoff

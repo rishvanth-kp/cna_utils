@@ -1,4 +1,4 @@
-readsDir: /scratch2/kaliappa/cnv/cnv_bounds/tlp_cfdna/reads
+readsDir: /scratch2/kaliappa/cnv/cnv_bounds/usc_um/reads
 read1Suffix: _R1_001.fastq.gz
 read2Suffix: _R2_001.fastq.gz
 
@@ -63,8 +63,14 @@ newGc20k:
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/bwa/hg19_20k_gc.bed
 
 badBins5k:
-#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/cfdna_5k_badbins.txt
-  /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/tlp_5k_badbins.txt
+  /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/cfdna_5k_badbins.txt
+#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/tlp_5k_badbins.txt
+#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/cfdna_5k_fifth_badbins.txt
+#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/wbc_5k_fifth_badbins.txt
+#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/wbc_5k_badbins.txt
 badBins20k:
-#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/cfdna_20k_badbins.txt
-  /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/tlp_20k_badbins.txt
+  /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/cfdna_20k_badbins.txt
+#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/tlp_20k_badbins.txt
+#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/cfdna_20k_fifth_badbins.txt
+#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/wbc_20k_fifth_badbins.txt
+#   /scratch2/kaliappa/cnv/cnv_bounds/bad_bins/wbc_20k_badbins.txt

@@ -37,8 +37,8 @@ rule all:
 rule mapReads:
   input:
     ref = config['ref'],
-    r1 = config['readsDir'] + '/{sample}_R1_001.fastq.gz',
-    r2 = config['readsDir'] + '/{sample}_R2_001.fastq.gz'
+    r1 = config['readsDir'] + '/{sample}' + config['read1Suffix'],
+    r2 = config['readsDir'] + '/{sample}' + config['read1Suffix']
   output:
     sam = 'mapped_reads/{sample}.sam',
     flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
@@ -143,11 +143,11 @@ rule oldCna:
   shell:
     '{config[binCounts]} -i {input.sam} -c {params.chromSizes} '
     '-b {params.binBounds5k} -o {output.counts5k} -s {output.stats5k}; '
-    '{config[cbs]} {output.counts5k} {params.sampleName5k} {params.gc5k} '
+    '{config[cbsNoBad]} {output.counts5k} {params.sampleName5k} {params.gc5k} '
     '{params.outDir}; '
     '{config[binCounts]} -i {input.sam} -c {params.chromSizes} '
     '-b {params.binBounds20k} -o {output.counts20k} -s {output.stats20k}; '
-    '{config[cbs]} {output.counts20k} {params.sampleName20k} {params.gc20k} '
+    '{config[cbsNoBad]} {output.counts20k} {params.sampleName20k} {params.gc20k} '
     '{params.outDir}'
 
 rule filterDeadzone:

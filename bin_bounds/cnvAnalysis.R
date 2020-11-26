@@ -225,10 +225,11 @@ PlotSegment <- function(cur.ratio, cur.ratio.good, out.dir, sample.name) {
        y=cur.ratio.good$lowratio,
        log="y", main=sample.name,
        xaxt="n", xlab="Chromosome",
-       yaxt="n", ylab="Ratio", col="#517FFF", cex=0.01)
+       yaxt="n", ylab="Ratio", col="#CCCCCC", cex=0.2, pch=19, 
+       ylim=c(0.2, max(cur.ratio.good$lowratio)))
 
   lines(x=cur.ratio.good$abspos, y=cur.ratio.good$seg.mean.LOWESS,
-        col="red", cex=1.0)
+        col="#0000AA", cex=1.0)
   axis(2, at=y.at, labels=y.labels)
   mtext(chr.text, at=chr.at, side=1, cex=0.4)
   abline(v=vlines, lwd=0.1, col="grey")
