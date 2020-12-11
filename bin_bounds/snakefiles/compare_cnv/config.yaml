@@ -1,4 +1,4 @@
-readsDir: /scratch2/kaliappa/cnv/cnv_bounds/usc_um/reads
+readsDir: /scratch2/kaliappa/cnv/cnv_bounds/rb_blood/reads
 read1Suffix: _R1_001.fastq.gz
 read2Suffix: _R2_001.fastq.gz
 
