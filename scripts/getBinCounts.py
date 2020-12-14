@@ -22,7 +22,9 @@ import pysam
 def addBinCount(chrom, pos, bins):
     if chrom in bins:
         offset = bisect.bisect_right(bins[chrom][0], pos)
-            deadzones[chrom][offset-1][2] += 1
+        bins[chrom][2][offset-1] += 1
+        return True
+    return False
 
 def isDead(chrom, pos, deadzones):
     if chrom in deadzones:
@@ -48,7 +50,7 @@ def main():
     args = parser.parse_args()
 
 
-    if (args.VERBOSE):
+    if args.VERBOSE:
         print('[READING DEADZONES]', file=sys.stderr)
     deadzones = {}
     for line in open(args.dzBedFile):
@@ -60,7 +62,7 @@ def main():
     for vals in deadzones.values():
         vals.sort()
 
-    if (args.VERBOSE):
+    if args.VERBOSE:
         print('[READING BIN BOUNDARIES]', file=sys.stderr)
     bins = {}
     chromOrder = [] 
@@ -74,11 +76,12 @@ def main():
             bins[chrom] = [[int(start)], [int(end)], [0]]
             chromOrder.append(chrom) 
 
-    if (args.VERBOSE):
-        print('[FILTERING ALIGNMENTS]', file=sys.stderr)
+    if args.VERBOSE:
+        print('[DETERMINING BIN COUNTS]', file=sys.stderr)
     totalMaps = 0
     passedMaps = 0
-    
+    countedMaps = 0    
+
     aligned = pysam.AlignmentFile(args.bamFile, 'r')
     for aln in aligned:
         alnChrom = aln.reference_name
@@ -86,18 +89,34 @@ def main():
         totalMaps += 1
         if (not isDead(alnChrom, alnPos, deadzones)):
             passedMaps += 1
+            if (addBinCount(alnChrom, alnPos, bins)):
+                countedMaps += 1
+
     aligned.close()
+
+    outFile = open(args.outFile, 'w')
+    if args.VERBOSE:
+        print('[WRITING BIN COUNTS]', file=sys.stderr)
+    for i in chromOrder:
+        start, end, counts = bins[i]
+        for j in range(0, len(start)):
+            print('%s\t%d\t%d\t%d' % (i, start[j], end[j], counts[j]), 
+                    file=outFile)
+    outFile.close()
 
     if (args.VERBOSE):
         filteredMaps = totalMaps - passedMaps
         passedFrac = (passedMaps / totalMaps) * 100
         filteredFrac = (filteredMaps / totalMaps) * 100
+        countedFrac = (countedMaps / totalMaps) * 100
         print('[FILTERED STATS]')
         print('\tTotal alignments: %d' % (totalMaps))
         print('\tPassed alignments: %d (%f%%)' %
                 (passedMaps, passedFrac))
         print('\tFiltered alignments: %d (%f%%)' %
                 (filteredMaps, filteredFrac))
+        print('\tCounted alignments: %d (%f%%)' %
+                (countedMaps, countedFrac))
 
 if __name__ == '__main__':
    main()
