@@ -10,5 +10,5 @@ snakemake \
 --rerun-incomplete \
 --cluster-config $REPO_PATH/snakefiles/pe_cnv/cluster.yaml \
 --cores 10 \
---cluster 'sbatch --partition={cluster.partition} --ntasks={cluster.cores} --mem={cluster.mem} --time={cluster.time} -o {cluster.logout} -e {cluster.logerror}' \
+--cluster 'sbatch --partition={cluster.partition} --ntasks={cluster.tasks} --cpus-per-task={cluster.cores} --mem={cluster.mem} --time={cluster.time} -o {cluster.logout} -e {cluster.logerror}' \
 $@
