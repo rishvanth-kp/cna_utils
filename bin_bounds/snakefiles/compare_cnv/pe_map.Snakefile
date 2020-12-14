@@ -38,7 +38,7 @@ rule mapReads:
   input:
     ref = config['ref'],
     r1 = config['readsDir'] + '/{sample}' + config['read1Suffix'],
-    r2 = config['readsDir'] + '/{sample}' + config['read1Suffix']
+    r2 = config['readsDir'] + '/{sample}' + config['read2Suffix']
   output:
     sam = 'mapped_reads/{sample}.sam',
     flagstat = 'flagstat/{sample}_mapped_flagstat.txt'
