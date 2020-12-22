@@ -60,7 +60,6 @@ def main():
         chromArm[line[0]] = int(line[2])
 
     out = open(args.outfile, 'w')
-    print('%s\t%s' % ('gc.content', 'chrom.arm'), file = out)
     for line in open(args.binBounds):
         line = line.strip().split()
         ch = line[0]
@@ -73,7 +72,9 @@ def main():
             arm = ch + 'p'
         else:
             arm = ch + 'q'
-        print('%s_%d\t%f\t%s' % (ch, start, gcContent, arm), file = out)
+        print('%s\t%d\t%d\t%f\t%s' % 
+                (ch, start, end, gcContent, arm), 
+                file = out)
 
     out.close()
 
