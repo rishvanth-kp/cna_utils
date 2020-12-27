@@ -25,12 +25,140 @@ library("optparse")
 library("DNAcopy")
 
 ##
-gc.smooth <- function(gc, ratio, lowess.f=0.05) {
+GCsmooth <- function(gc, ratio, lowess.f=0.05) {
   lowess.line <- lowess(gc, log2(ratio), f=lowess.f)
   lowess.points <- approx(lowess.line$x, lowess.line$y, gc)
   return(2^(log2(ratio) - lowess.points$y))
 }
 
+
+## The output of the segment functios is ordered alphabatically by
+## the chromosome name. This function convers it to chromosome order.
+CBSsort <- function(seg) {
+  chrom.numeric <- gsub("chr|p|q", "", seg$chrom)
+  chrom.numeric <- gsub("X", 23, chrom.numeric)
+  chrom.numeric <- gsub("Y", 24, chrom.numeric)
+  chrom.numeric <- as.numeric(chrom.numeric)
+  seg <- seg[order(chrom.numeric),]
+  return(seg)
+}
+
+## 
+Short2LongSegments <- function() {
+
+}
+
+##
+RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
+  print("Removing segment")
+  print(index)
+  print(seg[index,])
+  print(dim(seg))
+ 
+  append.left <- TRUE
+  check.sd.undo <- FALSE
+  ## TODO: HOLY FUCK!!! NEED TO GET RID OF THE CODE BELOW ASAP
+  if (index == 1) {
+    append.left <- FALSE
+  }
+  else {
+    if (index == nrow(seg)) {
+      append.left <- TRUE
+    }
+    else {
+      right.index <- index + 1
+      left.index <- index - 1
+    
+      if (seg$chrom[right.index] != seg$chrom[index]) {
+        append.left <- TRUE
+      }
+      else {
+        if (seg$chrom[left.index] != seg$chrom[index]) {
+          append.left <- FALSE
+        }
+        else {
+          if (abs(seg$seg.mean[left.index] - seg$seg.mean[index]) < 
+              abs(seg$seg.mean[right.index] - seg$seg.mean[index])) {
+            append.left <- TRUE
+            check.sd.undo <- TRUE
+          }
+          else {
+            append.left <- FALSE
+            check.sd.undo <- TRUE   
+          }
+        }
+      }
+    }
+  }
+
+  append.index <- index + 1
+  if (append.left) {
+    append.index <- index - 1
+  } 
+ 
+  if (append.left) {
+    seg$loc.end[append.index] <- seg$loc.end[index]
+    seg$end[append.index] <- seg$end[index] 
+  } 
+  else {
+    seg$loc.start[append.index] <- seg$loc.start[index]
+    seg$start[append.index] <- seg$start[index]
+  }
+
+  seg$num.mark[append.index] <- (seg$num.mark[append.index] +
+                                  seg$num.mark[index])
+  ## TODO: Add code to verify that that bin.ratio and seg are in the same 
+  ## chromosome order
+  seg$seg.mean[append.index] <- mean(log2(bin.ratio[seg$start[append.index]:
+                                          seg$end[append.index]]))
+  seg <- seg[-index,]
+  seg$num <- seq(1:nrow(seg))
+
+  if (check.sd.undo) {
+    left.index <- index - 1
+    right.index <- index
+
+    bin.ratio.sd <- mad(diff(bin.ratio)) / sqrt(2)
+    if (abs(seg$seg.mean[left.index] - seg$seg.mean[right.index]) < 
+          (bin.ratio.sd * undo.sd)) {
+      print("UNDO SD IN REMOVE SEGMENT") 
+      seg$loc.end[left.index] <- seg$loc.end[right.index]
+      seg$seg.end[left.index] <- seg$seg.end[right.index]
+      seg$num.mark[left.index] <- seg$num.mark[right.index]
+      seg$seg.mean[left.index] <- mean(log2(bin.ratio[seg$start[left.index]:
+                                            seg$end[right.index]]))
+      seg <- seg[-right.index,]
+      seg$num <- seq(1:nrow(seg))
+    }
+  }
+
+  return(seg)
+}
+
+## 
+RemoveShortSegments <- function(seg, bin.ratio , min.width, undo.sd) {
+ 
+  ## TODO: The code below can be replaced with 'cumsum' and 'seq' 
+  seg$num <- 0
+  seg$start <- 0
+  seg$end <- 0
+  prev.end <- 0
+  for (i in 1:nrow(seg)) {
+    start <- prev.end + 1
+    end <- prev.end + seg$num.mark[i]
+    seg$start[i] <- start
+    seg$end[i] <- end
+    seg$num[i] <- i 
+    prev.end <- end
+  }
+ 
+  while(min(seg$num.mark) < min.width) {
+    seg <- RemoveSegment(seg, bin.ratio, undo.sd, 
+              seg$num[order(seg$num.mark, abs(seg$seg.mean))[1]])
+  }
+ 
+  return(seg)
+} 
 
 ##
 CBSsegment <- function(bin.counts, gc, min.width, seed, alpha,
@@ -43,13 +171,12 @@ CBSsegment <- function(bin.counts, gc, min.width, seed, alpha,
   gc <- read.table(gc)
   names(gc) <- c("chr", "start", "end", "gc", "chr.arm")
 
-  ## merge the bin counts and gc bed files. The result is order in
+  ## merge the bin counts and gc bed files. The order in
   ## bin.counts is preserved
   seg <- merge(bin.counts, gc, by=c("chr", "start", "end"), sort=FALSE)
 
   seg$ratio <- (seg$count + 1) / mean(seg$count + 1)
-  seg$lowess.ratio <- gc.smooth(seg$gc, seg$ratio)
-  print(head(seg))
+  seg$lowess.ratio <- GCsmooth(seg$gc, seg$ratio)
 
   set.seed(seed)
   cbs.seg <- smooth.CNA(CNA(log2(seg$lowess.ratio), seg$chr.arm,
@@ -57,7 +184,17 @@ CBSsegment <- function(bin.counts, gc, min.width, seed, alpha,
                           sampleid=sample.name))
   cbs.seg <- segment(cbs.seg, alpha=alpha, nperm=n.perm,
                 undo.splits="sdundo", undo.SD=undo.sd, min.width=2)
-  print(cbs.seg[[2]])
+  cbs.seg <- cbs.seg[[2]]
+
+  ## TODO: need to deal with acrocentric chromosomes. At present, they 
+  ## generate bins of width 1. And RemoveShortSegments sometimes merges 
+  ## these with the wrong chomosomes.
+
+  cbs.seg <- CBSsort(cbs.seg)
+  print(cbs.seg)
+  cbs.seg <- RemoveShortSegments(cbs.seg, seg$lowess.ratio, 
+                min.width, undo.sd)
+  print(cbs.seg)
 
   return(seg)
 }
@@ -96,7 +233,8 @@ main <- function() {
                 alpha=opt$alpha, n.perm=opt$nperm, undo.sd=opt$undosd,
                 sample.name=opt$samplename)
 
-  write.table(cbs.seg, "test.txt", quote=FALSE)
+  write.table(cbs.seg, sprintf("%s_seg.txt", opt$samplename), 
+    quote=FALSE)
 }
 
 
