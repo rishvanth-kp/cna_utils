@@ -1,6 +1,6 @@
-readsDir: /scratch2/kaliappa/cnv/cnv_bounds/tlp_cells/reads
-read1Suffix: _R1_001.fastq.gz
-read2Suffix: _R2_001.fastq.gz
+readsDir: /scratch2/kaliappa/rna-seq/pc3/gdna/reads
+read1Suffix: _1.fastq.gz
+read2Suffix: _2.fastq.gz
 
 bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa
 ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
@@ -45,7 +45,7 @@ newBinBounds5k:
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/bwa/hg19_5k_bin_bounds.bed
 newGc5k:
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac_enc/hg19_5k_gz_dac_enc_gc.bed
-  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_5k_gz_enc_gc.bed
+  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_5k_gz_enc_gc.txt
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_dac/hg19_5k_gz_dac_gc.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz/hg19_5k_gz_gc.bed
 #  /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/bwa/hg19_5k_gc.bed

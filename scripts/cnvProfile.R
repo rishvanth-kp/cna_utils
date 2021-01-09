@@ -32,8 +32,8 @@ GCsmooth <- function(gc, ratio, lowess.f=0.05) {
 }
 
 
-## The output of the segment functios is ordered alphabatically by
-## the chromosome name. This function convers it to chromosome order.
+## The output of the segment function is ordered alphabatically by
+## the chromosome name. This function converts it to chromosome order.
 CBSsort <- function(seg) {
   chrom.numeric <- gsub("chr|p|q", "", seg$chrom)
   chrom.numeric <- gsub("X", 23, chrom.numeric)
@@ -91,10 +91,14 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     }
   }
 
+
   append.index <- index + 1
   if (append.left) {
     append.index <- index - 1
   } 
+
+  print(append.index)
+  print(append.left)
  
   if (append.left) {
     seg$loc.end[append.index] <- seg$loc.end[index]
@@ -124,13 +128,62 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
       print("UNDO SD IN REMOVE SEGMENT") 
       seg$loc.end[left.index] <- seg$loc.end[right.index]
       seg$seg.end[left.index] <- seg$seg.end[right.index]
-      seg$num.mark[left.index] <- seg$num.mark[right.index]
+      seg$num.mark[left.index] <- seg$num.mark[left.index] + 
+                                    seg$num.mark[right.index]
       seg$seg.mean[left.index] <- mean(log2(bin.ratio[seg$start[left.index]:
                                             seg$end[right.index]]))
       seg <- seg[-right.index,]
       seg$num <- seq(1:nrow(seg))
     }
   }
+
+  return(seg)
+}
+
+SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
+  
+  bin.ratio.sd <- mad(diff(bin.ratio)) / sqrt(2)
+
+  chrom <- seg$chrom
+  chrom.shift <- c(seg$chrom[-1], seg$chrom[1])
+  breakpoints <- which(chrom == chrom.shift)
+
+  undo.breakpoints <- breakpoints[which(abs(seg$seg.mean[breakpoints] - 
+                                  seg$seg.mean[breakpoints + 1]) <
+                                  bin.ratio.sd * undo.sd)]
+  print(breakpoints) 
+  print(undo.breakpoints)
+  
+  while(length(undo.breakpoints) >= 1) {
+    print("REMOVING SEGMENT IN UNDO SD ALL")
+    undo.df <- seg[undo.breakpoints,]
+    undo.df$seg.mean.diff <- abs(seg$seg.mean[undo.breakpoints] - 
+                                 seg$seg.mean[undo.breakpoints + 1])
+
+    print(undo.df)
+    left.index <- undo.df$num[which.min(undo.df$seg.mean.diff)]
+    right.index <- left.index + 1
+    print(left.index)
+    seg$loc.end[left.index] <- seg$loc.end[right.index]
+    seg$seg.end[left.index] <- seg$seg.end[right.index]
+    seg$num.mark[left.index] <- seg$num.mark[left.index] + 
+                                  seg$num.mark[right.index]
+    seg$seg.mean[left.index] <- mean(log2(bin.ratio[seg$start[left.index]:
+                                          seg$end[right.index]]))
+    seg <- seg[-right.index,]
+    seg$num <- seq(1:nrow(seg))
+  
+    chrom <- seg$chrom
+    chrom.shift <- c(seg$chrom[-1], seg$chrom[1])
+    breakpoints <- which(chrom == chrom.shift)
+    undo.breakpoints <- breakpoints[which(abs(seg$seg.mean[breakpoints] - 
+                                    seg$seg.mean[breakpoints + 1]) <
+                                    bin.ratio.sd * undo.sd)]
+    print(breakpoints) 
+    print(undo.breakpoints)
+  }
+  
+     
 
   return(seg)
 }
@@ -152,13 +205,22 @@ RemoveShortSegments <- function(seg, bin.ratio , min.width, undo.sd) {
     prev.end <- end
   }
  
-  while(min(seg$num.mark) < min.width) {
+  while (min(seg$num.mark) < min.width) {
     seg <- RemoveSegment(seg, bin.ratio, undo.sd, 
               seg$num[order(seg$num.mark, abs(seg$seg.mean))[1]])
   }
  
+  seg <- SegmentsUndoSD(seg, bin.ratio, undo.sd)
+
   return(seg)
 } 
+
+
+##
+MergeAcrocentric <- function(seg) {
+
+  return(seg)
+}
 
 ##
 CBSsegment <- function(bin.counts, gc, min.width, seed, alpha,
