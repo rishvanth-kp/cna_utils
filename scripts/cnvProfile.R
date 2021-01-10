@@ -43,6 +43,7 @@ CBSsort <- function(seg) {
   return(seg)
 }
 
+
 ##
 Short2LongSegments <- function(seg) {
 
@@ -56,57 +57,46 @@ Short2LongSegments <- function(seg) {
   return(long.seg)
 }
 
+
 ##
 RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
   print("REMOVING SEGMENT")
   print(index)
   print(seg[index,])
-  print(dim(seg))
 
   append.left <- TRUE
   check.sd.undo <- FALSE
-  ## TODO: HOLY FUCK!!! NEED TO GET RID OF THE CODE BELOW ASAP
   if (index == 1) {
     append.left <- FALSE
   }
+  else if (index == nrow(seg)) {
+    append.left <- TRUE
+  }
+  else if (seg$chrom[index] != seg$chrom[index - 1]) {
+    append.left <- FALSE
+  }
+  else if (seg$chrom[index] != seg$chrom[index + 1]) {
+    append.left <- TRUE
+  }
   else {
-    if (index == nrow(seg)) {
+    check.sd.undo <- TRUE
+    if (abs(seg$seg.mean[index - 1] - seg$seg.mean[index]) <
+        abs(seg$seg.mean[index + 1] - seg$seg.mean[index])) {
       append.left <- TRUE
     }
     else {
-      right.index <- index + 1
-      left.index <- index - 1
-
-      if (seg$chrom[right.index] != seg$chrom[index]) {
-        append.left <- TRUE
-      }
-      else {
-        if (seg$chrom[left.index] != seg$chrom[index]) {
-          append.left <- FALSE
-        }
-        else {
-          if (abs(seg$seg.mean[left.index] - seg$seg.mean[index]) <
-              abs(seg$seg.mean[right.index] - seg$seg.mean[index])) {
-            append.left <- TRUE
-            check.sd.undo <- TRUE
-          }
-          else {
-            append.left <- FALSE
-            check.sd.undo <- TRUE
-          }
-        }
-      }
+      append.left <- FALSE
     }
   }
-
 
   append.index <- index + 1
   if (append.left) {
     append.index <- index - 1
   }
 
-  print(append.index)
   print(append.left)
+  print(check.sd.undo)
+  print(append.index)
 
   if (append.left) {
     seg$loc.end[append.index] <- seg$loc.end[index]
@@ -119,8 +109,8 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
 
   seg$num.mark[append.index] <- (seg$num.mark[append.index] +
                                   seg$num.mark[index])
-  ## TODO: Add code to verify that that bin.ratio and seg are in the same
-  ## chromosome order
+  ## This is bad design. It makes the assumption that the chromosome order
+  ## in seg and bin ratio are the same
   seg$seg.mean[append.index] <- mean(log2(bin.ratio[seg$start[append.index]:
                                           seg$end[append.index]]))
   seg <- seg[-index,]
@@ -148,6 +138,8 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
   return(seg)
 }
 
+
+##
 SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
 
   bin.ratio.sd <- mad(diff(bin.ratio)) / sqrt(2)
@@ -194,22 +186,16 @@ SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
   return(seg)
 }
 
+
 ##
 RemoveShortSegments <- function(seg, bin.ratio , min.width, undo.sd) {
 
-  ## TODO: The code below can be replaced with 'cumsum' and 'seq'
-  seg$start <- 0
-  seg$end <- 0
-  seg$num <- 0
-  prev.end <- 0
-  for (i in 1:nrow(seg)) {
-    start <- prev.end + 1
-    end <- prev.end + seg$num.mark[i]
-    seg$start[i] <- start
-    seg$end[i] <- end
-    seg$num[i] <- i
-    prev.end <- end
-  }
+  seg$end <- cumsum(seg$num.mark)
+  seg$start <- seg$end - seg$num.mark + 1
+  seg$num <- seq(1:nrow(seg))
+
+  seg <- seg[,c("ID", "chrom", "loc.start", "loc.end", "num.mark",
+                "start", "end", "num", "seg.mean")]
 
   while (min(seg$num.mark) < min.width) {
     seg <- RemoveSegment(seg, bin.ratio, undo.sd,
@@ -225,8 +211,18 @@ RemoveShortSegments <- function(seg, bin.ratio , min.width, undo.sd) {
 ##
 MergeAcrocentric <- function(seg, min.width) {
 
+  for (i in unique(seg$chr)) {
+    arms <- unique(seg[seg$chr == i,]$chr.arm)
+    if (length(arms) == 2) {
+      if (nrow(seg[seg$chr.arm == arms[1],]) < min.width |
+          nrow(seg[seg$chr.arm == arms[2],]) < min.width) {
+        seg[seg$chr == i,]$chr.arm = i
+      }
+    }
+  }
   return(seg)
 }
+
 
 ##
 CBSsegment <- function(bin.counts, gc, min.width, seed, alpha,
@@ -243,6 +239,10 @@ CBSsegment <- function(bin.counts, gc, min.width, seed, alpha,
   ## bin.counts is preserved
   seg <- merge(bin.counts, gc, by=c("chr", "start", "end"), sort=FALSE)
 
+  ## Merge p and q chromosome arms if a chromosome arm is shorter than
+  ## the minimum segment width
+  seg <- MergeAcrocentric(seg, min.width)
+
   seg$ratio <- (seg$count + 1) / mean(seg$count + 1)
   seg$lowess.ratio <- GCsmooth(seg$gc, seg$ratio)
 
@@ -253,10 +253,6 @@ CBSsegment <- function(bin.counts, gc, min.width, seed, alpha,
   cbs.seg <- segment(cbs.seg, alpha=alpha, nperm=n.perm,
                 undo.splits="sdundo", undo.SD=undo.sd, min.width=2)
   cbs.seg <- cbs.seg[[2]]
-
-  ## TODO: need to deal with acrocentric chromosomes. At present, they
-  ## generate bins of width 1. And RemoveShortSegments sometimes merges
-  ## these with the wrong chomosomes.
 
   cbs.seg <- CBSsort(cbs.seg)
   cbs.seg <- RemoveShortSegments(cbs.seg, seg$lowess.ratio,
