@@ -54,6 +54,7 @@ Short2LongSegments <- function(seg) {
     long.seg <- c(long.seg,
                     rep(seg$seg.mean[i], seg$num.mark[i]))
   }
+  long.seg <- 2^long.seg
   return(long.seg)
 }
 
@@ -225,8 +226,8 @@ MergeAcrocentric <- function(seg, min.width) {
 
 
 ##
-CBSsegment <- function(bin.counts, gc, min.width, seed, alpha,
-                       n.perm, undo.sd, sample.name) {
+CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
+                       max.ploidy, seed, alpha, n.perm, undo.sd, sample.name) {
 
   ## 4 colunm bed file. col 4: bin count
   bin.counts <- read.table(bin.counts)
@@ -260,6 +261,21 @@ CBSsegment <- function(bin.counts, gc, min.width, seed, alpha,
 
   seg$seg.mean <- Short2LongSegments(cbs.seg)
 
+  ploidy <- seq(min.ploidy, max.ploidy, by=0.0005)
+  seg.cn <- outer(seg$seg.mean, ploidy)
+  cn.error <- (seg.cn - round(seg.cn)) ^ 2
+  cn.error <- colSums(cn.error)
+  ploidy <- ploidy[which.min(cn.error)]
+  cn.error <- min(cn.error)
+
+  print(head(seg))
+  print(ploidy)
+
+  seg$lowess.ratio.quantal <- seg$lowess.ratio * ploidy
+  seg$seg.mean.quantal <- seg$seg.mean * ploidy
+
+  print(head(seg))
+
   return(list(long.seg=seg, short.seg=cbs.seg))
 }
 
@@ -274,13 +290,17 @@ main <- function() {
               help="Sample name [Required]")
   parser <- add_option(parser, c("-w", "--minwidth"), default=3,
               help="CBS min segment width [Default: %default]")
-  parser <- add_option(parser, c("-s", "--seed"), default=25,
+  parser <- add_option(parser, c("--minploidy"), default=1.5,
+              help="Min. ploidy for CN estimation [Default: %default]")
+  parser <- add_option(parser, c("--maxploidy"), default=5.5,
+              help="Max. ploidy for CN estimation [Default: %default]")
+  parser <- add_option(parser, c("--seed"), default=25,
               help="RNG seed for CBS [Default: %default]")
-  parser <- add_option(parser, c("-a", "--alpha"), default=0.02,
+  parser <- add_option(parser, c("--alpha"), default=0.02,
               help="CBS segment alpha [Default: %default]")
-  parser <- add_option(parser, c("-p", "--nperm"), default=1000,
+  parser <- add_option(parser, c("--nperm"), default=1000,
               help="CBS number of permutations [Default: %default]")
-  parser <- add_option(parser, c("-u", "--undosd"), default=0.5,
+  parser <- add_option(parser, c("--undosd"), default=0.5,
               help="CBS undo SD [Default: %default]")
   parser <- add_option(parser, c("-v", "--verbose"), action="store_true",
               default=FALSE, help="Print extra output [FALSE]")
@@ -293,7 +313,8 @@ main <- function() {
   }
 
   cbs.seg <- CBSsegment(bin.counts=opt$bincounts, gc=opt$gc,
-                min.width=opt$minwidth, seed=opt$seed,
+                min.width=opt$minwidth, min.ploidy=opt$minploidy,
+                max.ploidy=opt$maxploidy, seed=opt$seed,
                 alpha=opt$alpha, n.perm=opt$nperm, undo.sd=opt$undosd,
                 sample.name=opt$samplename)
 
