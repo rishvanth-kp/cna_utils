@@ -47,8 +47,8 @@ CBSsort <- function(seg) {
 ##
 Short2LongSegments <- function(seg) {
 
-  print("Short2LongSegments")
-  print(sum(seg$num.mark))
+  # print("Short2LongSegments")
+  # print(sum(seg$num.mark))
   long.seg <- c()
   for (i in 1:nrow(seg)) {
     long.seg <- c(long.seg,
@@ -61,9 +61,9 @@ Short2LongSegments <- function(seg) {
 
 ##
 RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
-  print("REMOVING SEGMENT")
-  print(index)
-  print(seg[index,])
+  # print("REMOVING SEGMENT")
+  # print(index)
+  # print(seg[index,])
 
   append.left <- TRUE
   check.sd.undo <- FALSE
@@ -95,9 +95,9 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     append.index <- index - 1
   }
 
-  print(append.left)
-  print(check.sd.undo)
-  print(append.index)
+  # print(append.left)
+  # print(check.sd.undo)
+  # print(append.index)
 
   if (append.left) {
     seg$loc.end[append.index] <- seg$loc.end[index]
@@ -124,7 +124,7 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     bin.ratio.sd <- mad(diff(bin.ratio)) / sqrt(2)
     if (abs(seg$seg.mean[left.index] - seg$seg.mean[right.index]) <
           (bin.ratio.sd * undo.sd)) {
-      print("UNDO SD IN REMOVE SEGMENT")
+      # print("UNDO SD IN REMOVE SEGMENT")
       seg$loc.end[left.index] <- seg$loc.end[right.index]
       seg$seg.end[left.index] <- seg$seg.end[right.index]
       seg$num.mark[left.index] <- seg$num.mark[left.index] +
@@ -152,19 +152,19 @@ SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
   undo.breakpoints <- breakpoints[which(abs(seg$seg.mean[breakpoints] -
                                   seg$seg.mean[breakpoints + 1]) <
                                   bin.ratio.sd * undo.sd)]
-  print("REMOVING SEGMENT IN UNDO SD ALL")
-  print(breakpoints)
-  print(undo.breakpoints)
+  # print("REMOVING SEGMENT IN UNDO SD ALL")
+  # print(breakpoints)
+  # print(undo.breakpoints)
 
   while(length(undo.breakpoints) >= 1) {
     undo.df <- seg[undo.breakpoints,]
     undo.df$seg.mean.diff <- abs(seg$seg.mean[undo.breakpoints] -
                                  seg$seg.mean[undo.breakpoints + 1])
 
-    print(undo.df)
+    # print(undo.df)
     left.index <- undo.df$num[which.min(undo.df$seg.mean.diff)]
     right.index <- left.index + 1
-    print(left.index)
+    # print(left.index)
     seg$loc.end[left.index] <- seg$loc.end[right.index]
     seg$seg.end[left.index] <- seg$seg.end[right.index]
     seg$num.mark[left.index] <- seg$num.mark[left.index] +
@@ -180,8 +180,8 @@ SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
     undo.breakpoints <- breakpoints[which(abs(seg$seg.mean[breakpoints] -
                                     seg$seg.mean[breakpoints + 1]) <
                                     bin.ratio.sd * undo.sd)]
-    print(breakpoints)
-    print(undo.breakpoints)
+    # print(breakpoints)
+    # print(undo.breakpoints)
   }
 
   return(seg)
@@ -226,6 +226,23 @@ MergeAcrocentric <- function(seg, min.width) {
 
 
 ##
+CBSquantal <- function(seg, min.ploidy, max.ploidy) {
+
+  ploidy <- seq(min.ploidy, max.ploidy, by=0.05)
+  seg.cn <- outer(seg$seg.mean, ploidy)
+  cn.error <- (seg.cn - round(seg.cn)) ^ 2
+  cn.error <- colSums(cn.error)
+  ploidy <- ploidy[which.min(cn.error)]
+  cn.error <- min(cn.error)
+
+  seg$lowess.ratio.quantal <- seg$lowess.ratio * ploidy
+  seg$seg.mean.quantal <- seg$seg.mean * ploidy
+  # print(ploidy)
+
+  return(seg)
+}
+
+##
 CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
                        max.ploidy, seed, alpha, n.perm, undo.sd, sample.name) {
 
@@ -248,11 +265,11 @@ CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
   seg$lowess.ratio <- GCsmooth(seg$gc, seg$ratio)
 
   if (!is.null(bad.bins)) {
-    print("Removing bad bins")
+    # print("Removing bad bins")
     bad.bins <- read.table(bad.bins)
     names(bad.bins) <- c("chr", "start", "end")
-    print(bad.bins)
-    print(head(seg[,1:3]))
+    # print(bad.bins)
+    # print(head(seg[,1:3]))
     bin.match <- match(paste(seg[,1], seg[,2], sep="_"),
                        paste(bad.bins[,1], bad.bins[,2], sep="_"),
                        nomatch=FALSE)
@@ -260,32 +277,21 @@ CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
   }
 
   set.seed(seed)
-  cbs.seg <- smooth.CNA(CNA(log2(seg$lowess.ratio), seg$chr.arm,
+  seg.short <- smooth.CNA(CNA(log2(seg$lowess.ratio), seg$chr.arm,
                           seg$start, data.type="logratio",
                           sampleid=sample.name))
-  cbs.seg <- segment(cbs.seg, alpha=alpha, nperm=n.perm,
+  seg.short <- segment(cbs.seg, alpha=alpha, nperm=n.perm,
                 undo.splits="sdundo", undo.SD=undo.sd, min.width=2)
-  cbs.seg <- cbs.seg[[2]]
+  seg.short <- cbs.seg[[2]]
 
-  cbs.seg <- CBSsort(cbs.seg)
-  cbs.seg <- RemoveShortSegments(cbs.seg, seg$lowess.ratio,
+  seg.short <- CBSsort(cbs.seg)
+  seg.short <- RemoveShortSegments(cbs.seg, seg$lowess.ratio,
                 min.width, undo.sd)
 
-  seg$seg.mean <- Short2LongSegments(cbs.seg)
+  seg$seg.mean <- Short2LongSegments(seg.short)
+  seg <- CBSquantal(seg, min.ploidy, max.ploidy)
 
-  ploidy <- seq(min.ploidy, max.ploidy, by=0.05)
-  seg.cn <- outer(seg$seg.mean, ploidy)
-  cn.error <- (seg.cn - round(seg.cn)) ^ 2
-  cn.error <- colSums(cn.error)
-  ploidy <- ploidy[which.min(cn.error)]
-  cn.error <- min(cn.error)
-
-  print(ploidy)
-
-  seg$lowess.ratio.quantal <- seg$lowess.ratio * ploidy
-  seg$seg.mean.quantal <- seg$seg.mean * ploidy
-
-  return(list(long.seg=seg, short.seg=cbs.seg))
+  return(list(long.seg=seg, short.seg=seg.short))
 }
 
 main <- function() {
@@ -330,9 +336,9 @@ main <- function() {
                 sample.name=opt$samplename)
 
   write.table(cbs.seg$short.seg, sprintf("%s_short_seg.txt", opt$samplename),
-    row.names=FALSE, quote=FALSE)
+    row.names=FALSE, sep="\t", quote=FALSE)
   write.table(cbs.seg$long.seg, sprintf("%s_seg.txt", opt$samplename),
-    row.names=FALSE, quote=FALSE)
+    row.names=FALSE, sep="\t", quote=FALSE)
 
   if (!is.null(opt$badbins)) {
     cbs.seg.nobad <- CBSsegment(bin.counts=opt$bincounts, gc=opt$gc,
@@ -342,9 +348,9 @@ main <- function() {
                         undo.sd=opt$undosd, sample.name=opt$samplename)
 
     write.table(cbs.seg.nobad$short.seg, sprintf("%s_short_seg_nobad.txt",
-      opt$samplename), row.names=FALSE, quote=FALSE)
+      opt$samplename), row.names=FALSE, sep="\t", quote=FALSE)
     write.table(cbs.seg.nobad$long.seg, sprintf("%s_seg_nobad.txt",
-      opt$samplename), row.names=FALSE, quote=FALSE)
+      opt$samplename), row.names=FALSE, sep="\t", quote=FALSE)
   }
 
 }

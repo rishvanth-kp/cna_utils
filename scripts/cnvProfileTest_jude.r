@@ -167,7 +167,6 @@ cbs.segment01 <- function(outdir, varbin.gc, varbin.data, bad.bins, sample.name,
   ## 4 colunm bed file. col 4: bin count
   thisRatio <- read.table(varbin.data)
   names(thisRatio) <- c("chrom", "chrompos", "endpos", "bincount")  
-  print(head(thisRatio))
   thisRatio$abspos <- cumsum(as.numeric(thisRatio$endpos - thisRatio$chrompos))
 
 	thisRatio$chrom <- chrom.numeric
@@ -295,7 +294,7 @@ cbs.segment01 <- function(outdir, varbin.gc, varbin.data, bad.bins, sample.name,
 
 	write.table(thisQuantalStats, sep="\t", file=paste(outdir, "/", sample.name, "_jude_quantal_stats.txt", sep=""), quote=F, row.names=F) 
 	write.table(thisRatio, sep="\t", file=paste(outdir, "/", sample.name, "_jude_seg.txt", sep=""), quote=F, row.names=F) 
-	write.table(thisShort, sep="\t", file=paste(outdir, "/", sample.name, "_jude_shrot_seg.txt", sep=""), quote=F, row.names=F) 
+	write.table(thisShort, sep="\t", file=paste(outdir, "/", sample.name, "_jude_short_seg.txt", sep=""), quote=F, row.names=F) 
 
 
 	#bad <- read.table("/mnt/wigclust5/data/safe/kendall/badbins01/hg19.badbins.50k.txt", header=F, as.is=T, stringsAsFactors=F)
