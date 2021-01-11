@@ -247,6 +247,18 @@ CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
   seg$ratio <- (seg$count + 1) / mean(seg$count + 1)
   seg$lowess.ratio <- GCsmooth(seg$gc, seg$ratio)
 
+  if (!is.null(bad.bins)) {
+    print("Removing bad bins")
+    bad.bins <- read.table(bad.bins)
+    names(bad.bins) <- c("chr", "start", "end")
+    print(bad.bins)
+    print(head(seg[,1:3]))
+    bin.match <- match(paste(seg[,1], seg[,2], sep="_"),
+                       paste(bad.bins[,1], bad.bins[,2], sep="_"),
+                       nomatch=FALSE)
+    seg <- seg[!bin.match,]
+  }
+
   set.seed(seed)
   cbs.seg <- smooth.CNA(CNA(log2(seg$lowess.ratio), seg$chr.arm,
                           seg$start, data.type="logratio",
@@ -261,20 +273,17 @@ CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
 
   seg$seg.mean <- Short2LongSegments(cbs.seg)
 
-  ploidy <- seq(min.ploidy, max.ploidy, by=0.0005)
+  ploidy <- seq(min.ploidy, max.ploidy, by=0.05)
   seg.cn <- outer(seg$seg.mean, ploidy)
   cn.error <- (seg.cn - round(seg.cn)) ^ 2
   cn.error <- colSums(cn.error)
   ploidy <- ploidy[which.min(cn.error)]
   cn.error <- min(cn.error)
 
-  print(head(seg))
   print(ploidy)
 
   seg$lowess.ratio.quantal <- seg$lowess.ratio * ploidy
   seg$seg.mean.quantal <- seg$seg.mean * ploidy
-
-  print(head(seg))
 
   return(list(long.seg=seg, short.seg=cbs.seg))
 }
@@ -286,6 +295,8 @@ main <- function() {
               help="bin counts bed file [Required]")
   parser <- add_option(parser, c("-g", "--gc"),
               help="GC content bed file [Required]")
+  parser <- add_option(parser, c("-e", "--badbins"),
+              help="Bad bins to exclude bed file [Optional]")
   parser <- add_option(parser, c("-n", "--samplename"),
               help="Sample name [Required]")
   parser <- add_option(parser, c("-w", "--minwidth"), default=3,
@@ -322,7 +333,20 @@ main <- function() {
     row.names=FALSE, quote=FALSE)
   write.table(cbs.seg$long.seg, sprintf("%s_seg.txt", opt$samplename),
     row.names=FALSE, quote=FALSE)
-}
 
+  if (!is.null(opt$badbins)) {
+    cbs.seg.nobad <- CBSsegment(bin.counts=opt$bincounts, gc=opt$gc,
+                        bad.bins=opt$badbins, min.width=opt$minwidth,
+                        min.ploidy=opt$minploidy, max.ploidy=opt$maxploidy,
+                        seed=opt$seed, alpha=opt$alpha, n.perm=opt$nperm,
+                        undo.sd=opt$undosd, sample.name=opt$samplename)
+
+    write.table(cbs.seg.nobad$short.seg, sprintf("%s_short_seg_nobad.txt",
+      opt$samplename), row.names=FALSE, quote=FALSE)
+    write.table(cbs.seg.nobad$long.seg, sprintf("%s_seg_nobad.txt",
+      opt$samplename), row.names=FALSE, quote=FALSE)
+  }
+
+}
 
 main()
