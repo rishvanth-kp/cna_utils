@@ -61,9 +61,9 @@ Short2LongSegments <- function(seg) {
 
 ##
 RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
-  # print("REMOVING SEGMENT")
-  # print(index)
-  # print(seg[index,])
+  print("REMOVING SEGMENT")
+  print(index)
+  print(seg[index,])
 
   append.left <- TRUE
   check.sd.undo <- FALSE
@@ -95,9 +95,9 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     append.index <- index - 1
   }
 
-  # print(append.left)
-  # print(check.sd.undo)
-  # print(append.index)
+  print(append.left)
+  print(check.sd.undo)
+  print(append.index)
 
   if (append.left) {
     seg$loc.end[append.index] <- seg$loc.end[index]
@@ -121,12 +121,17 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     left.index <- index - 1
     right.index <- index
 
+    print(seg[left.index,])
+    print(seg[right.index,])
+
     bin.ratio.sd <- mad(diff(bin.ratio)) / sqrt(2)
     if (abs(seg$seg.mean[left.index] - seg$seg.mean[right.index]) <
           (bin.ratio.sd * undo.sd)) {
-      # print("UNDO SD IN REMOVE SEGMENT")
+      print("UNDO SD IN REMOVE SEGMENT")
       seg$loc.end[left.index] <- seg$loc.end[right.index]
-      seg$seg.end[left.index] <- seg$seg.end[right.index]
+      seg$end[left.index] <- seg$end[right.index]
+      print("FUCK")
+      print(seg[left.index,])
       seg$num.mark[left.index] <- seg$num.mark[left.index] +
                                     seg$num.mark[right.index]
       seg$seg.mean[left.index] <- mean(log2(bin.ratio[seg$start[left.index]:
@@ -136,6 +141,7 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     }
   }
 
+  print(seg)
   return(seg)
 }
 
@@ -166,7 +172,7 @@ SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
     right.index <- left.index + 1
     # print(left.index)
     seg$loc.end[left.index] <- seg$loc.end[right.index]
-    seg$seg.end[left.index] <- seg$seg.end[right.index]
+    seg$end[left.index] <- seg$end[right.index]
     seg$num.mark[left.index] <- seg$num.mark[left.index] +
                                   seg$num.mark[right.index]
     seg$seg.mean[left.index] <- mean(log2(bin.ratio[seg$start[left.index]:
@@ -197,6 +203,8 @@ RemoveShortSegments <- function(seg, bin.ratio , min.width, undo.sd) {
 
   seg <- seg[,c("ID", "chrom", "loc.start", "loc.end", "num.mark",
                 "start", "end", "num", "seg.mean")]
+
+  print(seg)
 
   while (min(seg$num.mark) < min.width) {
     seg <- RemoveSegment(seg, bin.ratio, undo.sd,
@@ -280,12 +288,12 @@ CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
   seg.short <- smooth.CNA(CNA(log2(seg$lowess.ratio), seg$chr.arm,
                           seg$start, data.type="logratio",
                           sampleid=sample.name))
-  seg.short <- segment(cbs.seg, alpha=alpha, nperm=n.perm,
+  seg.short <- segment(seg.short, alpha=alpha, nperm=n.perm,
                 undo.splits="sdundo", undo.SD=undo.sd, min.width=2)
-  seg.short <- cbs.seg[[2]]
+  seg.short <- seg.short[[2]]
 
-  seg.short <- CBSsort(cbs.seg)
-  seg.short <- RemoveShortSegments(cbs.seg, seg$lowess.ratio,
+  seg.short <- CBSsort(seg.short)
+  seg.short <- RemoveShortSegments(seg.short, seg$lowess.ratio,
                 min.width, undo.sd)
 
   seg$seg.mean <- Short2LongSegments(seg.short)
