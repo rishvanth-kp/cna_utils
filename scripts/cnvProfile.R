@@ -61,9 +61,9 @@ Short2LongSegments <- function(seg) {
 
 ##
 RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
-  print("REMOVING SEGMENT")
-  print(index)
-  print(seg[index,])
+  # print("REMOVING SEGMENT")
+  # print(index)
+  # print(seg[index,])
 
   append.left <- TRUE
   check.sd.undo <- FALSE
@@ -95,9 +95,9 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     append.index <- index - 1
   }
 
-  print(append.left)
-  print(check.sd.undo)
-  print(append.index)
+  # print(append.left)
+  # print(check.sd.undo)
+  # print(append.index)
 
   if (append.left) {
     seg$loc.end[append.index] <- seg$loc.end[index]
@@ -121,17 +121,16 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     left.index <- index - 1
     right.index <- index
 
-    print(seg[left.index,])
-    print(seg[right.index,])
+    # print(seg[left.index,])
+    # print(seg[right.index,])
 
     bin.ratio.sd <- mad(diff(bin.ratio)) / sqrt(2)
     if (abs(seg$seg.mean[left.index] - seg$seg.mean[right.index]) <
           (bin.ratio.sd * undo.sd)) {
-      print("UNDO SD IN REMOVE SEGMENT")
+      # print("UNDO SD IN REMOVE SEGMENT")
       seg$loc.end[left.index] <- seg$loc.end[right.index]
       seg$end[left.index] <- seg$end[right.index]
-      print("FUCK")
-      print(seg[left.index,])
+      # print(seg[left.index,])
       seg$num.mark[left.index] <- seg$num.mark[left.index] +
                                     seg$num.mark[right.index]
       seg$seg.mean[left.index] <- mean(log2(bin.ratio[seg$start[left.index]:
@@ -141,7 +140,7 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     }
   }
 
-  print(seg)
+  # print(seg)
   return(seg)
 }
 

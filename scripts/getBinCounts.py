@@ -39,7 +39,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input-bam', dest='bamFile',
                         required=True, help='mapped bam file')
-    parser.add_argument('-b' '--bin-bed', dest='binBedFile',
+    parser.add_argument('-b', '--bin-bed', dest='binBedFile',
                         required=True, help='deadzone bed file')
     parser.add_argument('-d', '--dz-bed', dest='dzBedFile',
                         required=True, help='sorted bin boundaries bed file')
