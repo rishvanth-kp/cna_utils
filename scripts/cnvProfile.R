@@ -46,9 +46,6 @@ CBSsort <- function(seg) {
 
 ##
 Short2LongSegments <- function(seg) {
-
-  # print("Short2LongSegments")
-  # print(sum(seg$num.mark))
   long.seg <- c()
   for (i in 1:nrow(seg)) {
     long.seg <- c(long.seg,
@@ -60,10 +57,7 @@ Short2LongSegments <- function(seg) {
 
 
 ##
-RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
-  # print("REMOVING SEGMENT")
-  # print(index)
-  # print(seg[index,])
+RemoveSegment <- function(seg, bin.ratio, undo.sd, index, verbose) {
 
   append.left <- TRUE
   check.sd.undo <- FALSE
@@ -95,9 +89,17 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     append.index <- index - 1
   }
 
-  # print(append.left)
-  # print(check.sd.undo)
-  # print(append.index)
+  if (verbose) {
+    message("[REMOVING SEGMENT]")
+    message("\tAppeding:")
+    message(sprintf("\t%s\t%d\t%d\t%d\t%f", seg[index,]$chrom,
+                      seg[index,]$start, seg[index,]$end,
+                      seg[index,]$num.mark, seg[index,]$seg.mean))
+    message(sprintf("\t%s\t%d\t%d\t%d\t%f", seg[append.index,]$chrom,
+                      seg[append.index,]$start, seg[append.index,]$end,
+                      seg[append.index,]$num.mark,
+                      seg[append.index,]$seg.mean))
+  }
 
   if (append.left) {
     seg$loc.end[append.index] <- seg$loc.end[index]
@@ -121,16 +123,23 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     left.index <- index - 1
     right.index <- index
 
-    # print(seg[left.index,])
-    # print(seg[right.index,])
+    if (verbose) {
+      message("\tMerging in undo SD:")
+      message(sprintf("\t%s\t%d\t%d\t%d\t%f", seg[left.index,]$chrom,
+                        seg[left.index,]$start, seg[left.index,]$end,
+                        seg[left.index,]$num.mark,
+                        seg[left.index,]$seg.mean))
+      message(sprintf("\t%s\t%d\t%d\t%d\t%f", seg[right.index,]$chrom,
+                        seg[right.index,]$start, seg[right.index,]$end,
+                        seg[right.index,]$num.mark,
+                        seg[right.index,]$seg.mean))
+    }
 
     bin.ratio.sd <- mad(diff(bin.ratio)) / sqrt(2)
     if (abs(seg$seg.mean[left.index] - seg$seg.mean[right.index]) <
           (bin.ratio.sd * undo.sd)) {
-      # print("UNDO SD IN REMOVE SEGMENT")
       seg$loc.end[left.index] <- seg$loc.end[right.index]
       seg$end[left.index] <- seg$end[right.index]
-      # print(seg[left.index,])
       seg$num.mark[left.index] <- seg$num.mark[left.index] +
                                     seg$num.mark[right.index]
       seg$seg.mean[left.index] <- mean(log2(bin.ratio[seg$start[left.index]:
@@ -140,13 +149,16 @@ RemoveSegment <- function(seg, bin.ratio, undo.sd, index) {
     }
   }
 
-  # print(seg)
   return(seg)
 }
 
 
 ##
-SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
+SegmentsUndoSD <- function(seg, bin.ratio, undo.sd, verbose=FALSE) {
+
+  if (verbose) {
+    message("[GLOBAL UNDO SD]")
+  }
 
   bin.ratio.sd <- mad(diff(bin.ratio)) / sqrt(2)
 
@@ -157,19 +169,27 @@ SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
   undo.breakpoints <- breakpoints[which(abs(seg$seg.mean[breakpoints] -
                                   seg$seg.mean[breakpoints + 1]) <
                                   bin.ratio.sd * undo.sd)]
-  # print("REMOVING SEGMENT IN UNDO SD ALL")
-  # print(breakpoints)
-  # print(undo.breakpoints)
 
   while(length(undo.breakpoints) >= 1) {
     undo.df <- seg[undo.breakpoints,]
     undo.df$seg.mean.diff <- abs(seg$seg.mean[undo.breakpoints] -
                                  seg$seg.mean[undo.breakpoints + 1])
 
-    # print(undo.df)
     left.index <- undo.df$num[which.min(undo.df$seg.mean.diff)]
     right.index <- left.index + 1
-    # print(left.index)
+
+    if (verbose) {
+      message("\tMerging:")
+      message(sprintf("\t%s\t%d\t%d\t%d\t%f", seg[left.index,]$chrom,
+                        seg[left.index,]$start, seg[left.index,]$end,
+                        seg[left.index,]$num.mark,
+                        seg[left.index,]$seg.mean))
+      message(sprintf("\t%s\t%d\t%d\t%d\t%f", seg[right.index,]$chrom,
+                        seg[right.index,]$start, seg[right.index,]$end,
+                        seg[right.index,]$num.mark,
+                        seg[right.index,]$seg.mean))
+    }
+
     seg$loc.end[left.index] <- seg$loc.end[right.index]
     seg$end[left.index] <- seg$end[right.index]
     seg$num.mark[left.index] <- seg$num.mark[left.index] +
@@ -185,8 +205,6 @@ SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
     undo.breakpoints <- breakpoints[which(abs(seg$seg.mean[breakpoints] -
                                     seg$seg.mean[breakpoints + 1]) <
                                     bin.ratio.sd * undo.sd)]
-    # print(breakpoints)
-    # print(undo.breakpoints)
   }
 
   return(seg)
@@ -194,8 +212,12 @@ SegmentsUndoSD <- function(seg, bin.ratio, undo.sd) {
 
 
 ##
-RemoveShortSegments <- function(seg, bin.ratio , min.width, undo.sd) {
+RemoveShortSegments <- function(seg, bin.ratio , min.width, undo.sd,
+                                verbose=FALSE) {
 
+  if (verbose) {
+    message("[REMOVING SHORT SEGMENTS]")
+  }
   seg$end <- cumsum(seg$num.mark)
   seg$start <- seg$end - seg$num.mark + 1
   seg$num <- seq(1:nrow(seg))
@@ -203,28 +225,33 @@ RemoveShortSegments <- function(seg, bin.ratio , min.width, undo.sd) {
   seg <- seg[,c("ID", "chrom", "loc.start", "loc.end", "num.mark",
                 "start", "end", "num", "seg.mean")]
 
-  print(seg)
-
   while (min(seg$num.mark) < min.width) {
     seg <- RemoveSegment(seg, bin.ratio, undo.sd,
-              seg$num[order(seg$num.mark, abs(seg$seg.mean))[1]])
+              seg$num[order(seg$num.mark, abs(seg$seg.mean))[1]],
+              verbose)
   }
 
-  seg <- SegmentsUndoSD(seg, bin.ratio, undo.sd)
+  seg <- SegmentsUndoSD(seg, bin.ratio, undo.sd, verbose)
 
   return(seg)
 }
 
 
 ##
-MergeAcrocentric <- function(seg, min.width) {
+MergeAcrocentric <- function(seg, min.width, verbose=FALSE) {
 
+  if (verbose){
+    message("[MERGING ACROCENTRIC CHROMOSOMES]")
+  }
   for (i in unique(seg$chr)) {
     arms <- unique(seg[seg$chr == i,]$chr.arm)
     if (length(arms) == 2) {
       if (nrow(seg[seg$chr.arm == arms[1],]) < min.width |
           nrow(seg[seg$chr.arm == arms[2],]) < min.width) {
         seg[seg$chr == i,]$chr.arm = i
+        if (verbose) {
+          message("\tMerging: ", i)
+        }
       }
     }
   }
@@ -233,7 +260,11 @@ MergeAcrocentric <- function(seg, min.width) {
 
 
 ##
-CBSquantal <- function(seg, min.ploidy, max.ploidy) {
+CBSquantal <- function(seg, min.ploidy, max.ploidy, verbose=FALSE) {
+
+  if (verbose) {
+    message("[CALCULATING PLOIDY]")
+  }
 
   ploidy <- seq(min.ploidy, max.ploidy, by=0.05)
   seg.cn <- outer(seg$seg.mean, ploidy)
@@ -244,15 +275,23 @@ CBSquantal <- function(seg, min.ploidy, max.ploidy) {
 
   seg$lowess.ratio.quantal <- seg$lowess.ratio * ploidy
   seg$seg.mean.quantal <- seg$seg.mean * ploidy
-  # print(ploidy)
+
+  if (verbose) {
+    message("\tPloidy: ", ploidy)
+    message("\tError: ", cn.error)
+  }
 
   return(seg)
 }
 
 ##
 CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
-                       max.ploidy, seed, alpha, n.perm, undo.sd, sample.name) {
+                        max.ploidy, seed, alpha, n.perm, undo.sd, sample.name,
+                        verbose=FALSE) {
 
+  if (verbose) {
+    message("[READING BIN COUNTS AND GC CONTENT]")
+  }
   ## 4 colunm bed file. col 4: bin count
   bin.counts <- read.table(bin.counts)
   names(bin.counts) <- c("chr", "start", "end", "count")
@@ -266,23 +305,32 @@ CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
 
   ## Merge p and q chromosome arms if a chromosome arm is shorter than
   ## the minimum segment width
-  seg <- MergeAcrocentric(seg, min.width)
+  seg <- MergeAcrocentric(seg, min.width, verbose)
 
+  if (verbose) {
+    message("[LOWESS SMOOTHING FOR GC CONTENT]")
+  }
   seg$ratio <- (seg$count + 1) / mean(seg$count + 1)
   seg$lowess.ratio <- GCsmooth(seg$gc, seg$ratio)
 
   if (!is.null(bad.bins)) {
-    # print("Removing bad bins")
+    if (verbose) {
+      message("[REMOVING BAD BINS]")
+    }
     bad.bins <- read.table(bad.bins)
     names(bad.bins) <- c("chr", "start", "end")
-    # print(bad.bins)
-    # print(head(seg[,1:3]))
     bin.match <- match(paste(seg[,1], seg[,2], sep="_"),
                        paste(bad.bins[,1], bad.bins[,2], sep="_"),
                        nomatch=FALSE)
     seg <- seg[!bin.match,]
+    if (verbose) {
+      message("\t", sum(bin.match != 0), " bins removed")
+    }
   }
 
+  if (verbose) {
+    message("[SEGMENTING BIN COUNTS]")
+  }
   set.seed(seed)
   seg.short <- smooth.CNA(CNA(log2(seg$lowess.ratio), seg$chr.arm,
                           seg$start, data.type="logratio",
@@ -290,13 +338,13 @@ CBSsegment <- function(bin.counts, gc, bad.bins=NULL, min.width, min.ploidy,
   seg.short <- segment(seg.short, alpha=alpha, nperm=n.perm,
                 undo.splits="sdundo", undo.SD=undo.sd, min.width=2)
   seg.short <- seg.short[[2]]
-
   seg.short <- CBSsort(seg.short)
+
   seg.short <- RemoveShortSegments(seg.short, seg$lowess.ratio,
-                min.width, undo.sd)
+                min.width, undo.sd, verbose)
 
   seg$seg.mean <- Short2LongSegments(seg.short)
-  seg <- CBSquantal(seg, min.ploidy, max.ploidy)
+  seg <- CBSquantal(seg, min.ploidy, max.ploidy, verbose)
 
   return(list(long.seg=seg, short.seg=seg.short))
 }
@@ -336,11 +384,14 @@ main <- function() {
     quit(status=1)
   }
 
+  if (opt$verbose) {
+    message("[CNV PROFILING WITH ALL BINS]")
+  }
   cbs.seg <- CBSsegment(bin.counts=opt$bincounts, gc=opt$gc,
                 min.width=opt$minwidth, min.ploidy=opt$minploidy,
                 max.ploidy=opt$maxploidy, seed=opt$seed,
                 alpha=opt$alpha, n.perm=opt$nperm, undo.sd=opt$undosd,
-                sample.name=opt$samplename)
+                sample.name=opt$samplename, verbose=opt$verbose)
 
   write.table(cbs.seg$short.seg, sprintf("%s_short_seg.txt", opt$samplename),
     row.names=FALSE, sep="\t", quote=FALSE)
@@ -348,11 +399,15 @@ main <- function() {
     row.names=FALSE, sep="\t", quote=FALSE)
 
   if (!is.null(opt$badbins)) {
+    if (opt$verbose) {
+      message("\n[CNV PROFILING WITHOUT BAD BINS]")
+    }
     cbs.seg.nobad <- CBSsegment(bin.counts=opt$bincounts, gc=opt$gc,
                         bad.bins=opt$badbins, min.width=opt$minwidth,
                         min.ploidy=opt$minploidy, max.ploidy=opt$maxploidy,
                         seed=opt$seed, alpha=opt$alpha, n.perm=opt$nperm,
-                        undo.sd=opt$undosd, sample.name=opt$samplename)
+                        undo.sd=opt$undosd, sample.name=opt$samplename,
+                        verbose=opt$verbose)
 
     write.table(cbs.seg.nobad$short.seg, sprintf("%s_short_seg_nobad.txt",
       opt$samplename), row.names=FALSE, sep="\t", quote=FALSE)
