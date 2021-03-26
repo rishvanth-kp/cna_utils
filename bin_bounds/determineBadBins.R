@@ -35,16 +35,16 @@ main <- function() {
   n.samples <- 0
   for (i in sample.files$files) {
     ## first 3 colums contain chr, start, and end
-    ## column 8 has the lowratio
+    ## column 9 has the lowratio
     sample <- read.table(i, header = TRUE)
     sample.name <- sprintf("sample.%d", n.samples)
     if (first) {
-      ratios <- sample[, c(1, 2, 3, 8)]
+      ratios <- sample[, c(1, 2, 3, 9)]
       names(ratios) <- c("chrom", "start", "end", sample.name)
       first <- FALSE
     }
     else {
-      ratios$lowratio <- sample[, 8]
+      ratios$lowratio <- sample[, 9]
       names(ratios)[ncol(ratios)] <- sample.name
     }
     n.samples <- n.samples + 1
@@ -53,9 +53,10 @@ main <- function() {
   n.bins <- nrow(ratios)
 
   ## exclude sex chromosomes
-  ratios <- ratios[!ratios$chrom == 23,]
-  ratios <- ratios[!ratios$chrom == 24,]
-
+  ratios <- ratios[!ratios$chrom == "chrX",]
+  ratios <- ratios[!ratios$chrom == "chrY",]
+  ratios$chrom <- as.integer(gsub("chr", "", ratios$chrom))
+  
   ## standardize the bin ratios using the mean and sd of each
   ## chromosome.
   for (i in seq(1, 22)) {
@@ -77,10 +78,10 @@ main <- function() {
   ratios$median <- apply(as.matrix(ratios[, 4:ncol(ratios)]), 1, n.gt,
                           gt.val = cut.off)
   bad.bins <- ratios[ratios$median >= (n.samples/2), 1:3]
+  bad.bins$chrom <- paste0("chr", bad.bins$chrom)
 
-
-  write.table(bad.bins, outfile, sep = "\t", quote = FALSE,
-              col.names = FALSE)
+  write.table(bad.bins, outfile, sep="\t", quote=FALSE,
+              col.names=FALSE, row.names=FALSE)
 }
 
 main()

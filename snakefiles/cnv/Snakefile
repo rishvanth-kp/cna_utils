@@ -79,10 +79,12 @@ rule removePcrDups:
     fixmateBam = temp('{}/{{sample}}_fixmate.bam'.format(config['mappedDir'])),
     sortedBam = temp('{}/{{sample}}_sorted.bam'.format(config['mappedDir'])),
     rmdupBam = temp('{}/{{sample}}_rmdup.bam'.format(config['mappedDir']))
+  params:
+    tmpDir = '{}/{{sample}}'.format(config['tmpDir'])
   threads:
     config['nThreads']
   shell:
-    'samtools collate -@ {threads} -o {output.collateBam} {input}; '
+    'samtools collate -@ {threads} -o {output.collateBam} {input} {params.tmpDir}; '
     'samtools fixmate -@ {threads} -m {output.collateBam} '
     '{output.fixmateBam}; '
     'samtools sort -@ {threads} -o {output.sortedBam} {output.fixmateBam}; '
@@ -160,8 +162,8 @@ rule cnvProfile:
     sampleName20k = '{sample}_20k'
   shell:
     '{config[cnvSeg]} -b {input.counts5k} -g {params.gc5k} '
-    '-e {params.badBins5k} -o {params.outdir} '
-    '-n {params.sampleName5k} -v; '
+    '-e {params.badBins5k} '
+    '-o {params.outdir} -n {params.sampleName5k} -v; '
     '{config[cnvSeg]} -b {input.counts20k} -g {params.gc20k} '
-    '-e {params.badBins20k} -o {params.outdir} '
-    '-n {params.sampleName20k} -v'
+    '-e {params.badBins20k} '
+    '-o {params.outdir} -n {params.sampleName20k} -v'
