@@ -1,27 +1,32 @@
 ## Read names
-read1Suffix: _1.fastq.gz
-read2Suffix: _2.fastq.gz
+read1Suffix: _R1_001.fastq.gz
+read2Suffix: _R2_001.fastq.gz
 
 ## Input/output dirs
-readsDir: /project/kaliappa_550/rish/wga/pta/reads
-fastqcDir: /project/kaliappa_550/rish/wga/pta/fastqc
-mappedDir: /project/kaliappa_550/rish/wga/pta/mapped_reads
-flagstatDir: /project/kaliappa_550/rish/wga/pta/flagstat
-insertSzDir: /project/kaliappa_550/rish/wga/pta/insert_sz
-countsDir: /project/kaliappa_550/rish/wga/pta/bin_counts
-cnvDir: /project/kaliappa_550/rish/wga/pta/cnv
-logDir: /project/kaliappa_550/rish/wga/pta/logs
-tmpDir: /project/kaliappa_550/rish/wga/pta/tmpdir
+readsDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/reads
+fastqcDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/fastqc
+mappedDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/mapped_reads
+flagstatDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/flagstat
+insertSzDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/insert_sz
+countsDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/bin_counts
+cnvDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/cnv
+logDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/logs
+tmpDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/tmpdir
 
 ## Tools
 bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa
 picard: /scratch2/kaliappa/tools/picard/picard.jar
 binCounts: /scratch2/kaliappa/cnv/CNVPipeline/scripts/getBinCounts.py
 cnvSeg: /scratch2/kaliappa/cnv/CNVPipeline/scripts/cnvProfile.R
+preseq: /project/kaliappa_550/rish/tools/preseq/preseq_install/bin/preseq 
+plotLcCurve: /project/kaliappa_550/rish/methyl/bs_utils/scripts/lcExtraPlot.R
 
 ## Tool parameters
 nThreads: 16
 minMapq: 30
+
+preseqStep: 100000
+preseqExtrap: 100000000
 
 ## Data
 ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
