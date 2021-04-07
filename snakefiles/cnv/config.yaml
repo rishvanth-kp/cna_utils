@@ -3,15 +3,15 @@ read1Suffix: _R1_001.fastq.gz
 read2Suffix: _R2_001.fastq.gz
 
 ## Input/output dirs
-readsDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/reads
-fastqcDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/fastqc
-mappedDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/mapped_reads
-flagstatDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/flagstat
-insertSzDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/insert_sz
-countsDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/bin_counts
-cnvDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/cnv
-logDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/logs
-tmpDir: /scratch2/kaliappa/cnv/cnv_bounds/wbc/new_cnv_script/tmpdir
+readsDir: /scratch2/kaliappa/cnv/chla_mm/reads
+fastqcDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/fastqc
+mappedDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/mapped_reads
+flagstatDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/flagstat
+insertSzDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/insert_sz
+countsDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/bin_counts
+cnvDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/cnv
+logDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/logs
+tmpDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/tmpdir
 
 ## Tools
 bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa

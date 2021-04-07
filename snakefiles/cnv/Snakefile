@@ -28,13 +28,13 @@ print(samples)
 
 rule all:
   input:
-#     expand('{}/{{sample}}_R1_001_fastqc.html'.format(config['fastqcDir']),
-#             sample=samples),
-#     expand('{}/{{sample}}_insert_sz.pdf'.format(config['insertSzDir']),
-#             sample=samples),
-#     expand('{}/{{sample}}_5k_seg.txt'.format(config['cnvDir']),
-#             sample=samples),
-    expand('complexity/{sample}_lc_extrap.pdf', sample=samples)
+    expand('{}/{{sample}}_R1_001_fastqc.html'.format(config['fastqcDir']),
+            sample=samples),
+    expand('{}/{{sample}}_insert_sz.pdf'.format(config['insertSzDir']),
+            sample=samples),
+    expand('{}/{{sample}}_5k_seg.txt'.format(config['cnvDir']),
+            sample=samples),
+#     expand('complexity/{sample}_lc_extrap.pdf', sample=samples)
 
 rule fastQc:
   input:
@@ -79,7 +79,7 @@ rule removePcrDups:
     collateBam = temp('{}/{{sample}}_collate.bam'.format(config['mappedDir'])),
     fixmateBam = temp('{}/{{sample}}_fixmate.bam'.format(config['mappedDir'])),
     sortedBam = temp('{}/{{sample}}_sorted.bam'.format(config['mappedDir'])),
-    rmdupBam = temp('{}/{{sample}}_rmdup.bam'.format(config['mappedDir']))
+    rmdupBam = '{}/{{sample}}_rmdup.bam'.format(config['mappedDir'])
   params:
     tmpDir = '{}/{{sample}}'.format(config['tmpDir'])
   threads:
@@ -95,7 +95,7 @@ rule removeAmbig:
   input:
     '{}/{{sample}}_rmdup.bam'.format(config['mappedDir'])
   output:
-    temp('{}/{{sample}}_unique.bam'.format(config['mappedDir']))
+    '{}/{{sample}}_unique.bam'.format(config['mappedDir'])
   params:
     minMapq = config['minMapq']
   threads:
