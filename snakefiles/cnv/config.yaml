@@ -4,14 +4,14 @@ read2Suffix: _R2_001.fastq.gz
 
 ## Input/output dirs
 readsDir: /scratch2/kaliappa/cnv/chla_mm/reads
-fastqcDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/fastqc
-mappedDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/mapped_reads
-flagstatDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/flagstat
-insertSzDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/insert_sz
-countsDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/bin_counts
-cnvDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/cnv
-logDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/logs
-tmpDir: /scratch2/kaliappa/cnv/chla_mm/hg_map/tmpdir
+fastqcDir: /scratch2/kaliappa/cnv/chla_mm/mm_map/fastqc
+mappedDir: /scratch2/kaliappa/cnv/chla_mm/mm_map/mapped_reads
+flagstatDir: /scratch2/kaliappa/cnv/chla_mm/mm_map/flagstat
+insertSzDir: /scratch2/kaliappa/cnv/chla_mm/mm_map/insert_sz
+countsDir: /scratch2/kaliappa/cnv/chla_mm/mm_map/bin_counts
+cnvDir: /scratch2/kaliappa/cnv/chla_mm/mm_map/cnv
+logDir: /scratch2/kaliappa/cnv/chla_mm/mm_map/logs
+tmpDir: /scratch2/kaliappa/cnv/chla_mm/mm_map/tmpdir
 
 ## Tools
 bwa: /scratch2/kaliappa/tools/bwa/bwa-0.7.17/bwa
@@ -29,7 +29,8 @@ preseqStep: 100000
 preseqExtrap: 100000000
 
 ## Data
-ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
+# ref: /scratch2/kaliappa/tools/bwa/hg19/hg19.fa
+ref: /project/kaliappa_550/rish/references/mm10/mm10.fa
 
 dzBed: /scratch2/kaliappa/cnv/cnv_bounds/genome_reads/boundaries/bin_bounds_150bp/gz_enc/hg19_150bp_dz_enc.bed
 
