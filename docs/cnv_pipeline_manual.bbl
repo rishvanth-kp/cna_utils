@@ -1,0 +1,40 @@
+\begin{thebibliography}{5}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Amemiya et~al.(2019)Amemiya, Kundaje, and Boyle]{amemiya2019encode}
+Haley~M Amemiya, Anshul Kundaje, and Alan~P Boyle.
+\newblock The encode blacklist: identification of problematic regions of the
+  genome.
+\newblock \emph{Scientific reports}, 9\penalty0 (1):\penalty0 1--5, 2019.
+
+\bibitem[Baslan et~al.(2012)Baslan, Kendall, Rodgers, Cox, Riggs, Stepansky,
+  Troge, Ravi, Esposito, Lakshmi, et~al.]{baslan2012genome}
+Timour Baslan, Jude Kendall, Linda Rodgers, Hilary Cox, Mike Riggs, Asya
+  Stepansky, Jennifer Troge, Kandasamy Ravi, Diane Esposito, B~Lakshmi, et~al.
+\newblock Genome-wide copy number analysis of single cells.
+\newblock \emph{Nature protocols}, 7\penalty0 (6):\penalty0 1024--1041, 2012.
+
+\bibitem[Kendall and Krasnitz(2014)]{kendall2014computational}
+Jude Kendall and Alexander Krasnitz.
+\newblock Computational methods for dna copy-number analysis of tumors.
+\newblock In \emph{Cancer Genomics and Proteomics}, pages 243--259. Springer,
+  2014.
+
+\bibitem[Li(2013)]{li2013aligning}
+Heng Li.
+\newblock Aligning sequence reads, clone sequences and assembly contigs with
+  bwa-mem.
+\newblock \emph{arXiv preprint arXiv:1303.3997}, 2013.
+
+\bibitem[Olshen et~al.(2004)Olshen, Venkatraman, Lucito, and
+  Wigler]{olshen2004circular}
+Adam~B Olshen, ES~Venkatraman, Robert Lucito, and Michael Wigler.
+\newblock Circular binary segmentation for the analysis of array-based dna copy
+  number data.
+\newblock \emph{Biostatistics}, 5\penalty0 (4):\penalty0 557--572, 2004.
+
+\end{thebibliography}

@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2019/Debian)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: cnv_pipeline_manual.aux
+The style file: plainnat.bst
+Database file #1: cnv_pipeline_manual.bib
+You've used 5 entries,
+            2773 wiz_defined-function locations,
+            627 strings with 5851 characters,
+and the built_in function-call counts, 2858 in all, are:
+= -- 249
+> -- 201
+< -- 3
++ -- 68
+- -- 63
+* -- 247
+:= -- 447
+add.period$ -- 16
+call.type$ -- 5
+change.case$ -- 35
+chr.to.int$ -- 5
+cite$ -- 10
+duplicate$ -- 115
+empty$ -- 205
+format.name$ -- 70
+if$ -- 588
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 5
+newline$ -- 33
+num.names$ -- 20
+pop$ -- 68
+preamble$ -- 1
+purify$ -- 30
+quote$ -- 0
+skip$ -- 95
+stack$ -- 0
+substring$ -- 111
+swap$ -- 14
+text.length$ -- 1
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 55
+warning$ -- 0
+while$ -- 24
+width$ -- 0
+write$ -- 72
