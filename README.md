@@ -1,6 +1,16 @@
 # cna_utils
 A bunch of tools for copy number analysis.
 
+## Documentation
+Detailed information on the prerequisite software packages, preparing
+the reference genome, and step by step guide to copy number profile
+generation can be found
+[here]{https://github.com/rishvanth-kp/cna_utils/blob/master/docs/cnv_pipeline_manual.pdf}.
+
+## Contact info
+Rishvanth Prabakar
+kaliapp@cshl.edu
+
 ## Copyright and License Information
 Copyright (C) 2020 Rishvanth Prabakar
 
