@@ -16,7 +16,7 @@
 
 \newcommand{\prog}[1]{\texttt{#1}}
 
-\title{CSI-Cancer Copy Number Analysis Pipeline}
+\title{A Copy Number Analysis Pipeline}
 \author{Rish Prabakar}
 
 \begin{document}
@@ -41,9 +41,8 @@ A personal workstation with at least 16GB of memory and 5GB of free disk
 space can be used for the analysis of one or at most a few samples.
 %
 For processing a large number of samples, it is highly recommended that
-the analysis is done on a compute cluster such as the
-\href{https://carc.usc.edu/}{USC Discovery cluster}. A compute cluster
-provides hundreds of nodes that can process files in parallel, and thus
+the analysis is done on a compute cluster. A compute cluster provides
+hundreds of nodes that can process files in parallel, and thus
 significantly speeding up the analysis.
 
 
@@ -57,16 +56,18 @@ This copy number analysis pipeline is based on the procedure described in
 bin boundaries that are designed for 150bp paired-end reads, and with
 an additional step of explicitly filtering reads that align to ambiguous
 or problematic regions of the reference genome. Briefly, the human
-reference genome (hg19) is split into 5000 (or 20,000) bins containing
-an equal number of uniquely mappable locations, and the bin counts are
-determined using uniquely mapped reads that do not align to the
-ambiguous or problematic regions. Bins with spuriously high counts
-(``bad bins,'' typically around centromeric and telomeric regions) are
-masked for downstream analysis. This procedure normalizes bin counts for
-biases correlated with GC content by fitting a LOWESS curve to the GC
-content by bin count, and subtracting the LOWESS estimate from each bin.
-Circular binary segmentation (CBS) \citep{olshen2004circular}, then
-identifies breakpoints in the normalized bin counts.
+reference genome (hg19 or hg38) is split into bins (typically 5000, but
+can higher or lower depending on the resolution needed and number of
+reads sequenced) containing an equal number of uniquely mappable
+locations, and the bin counts are determined using uniquely mapped reads
+that do not align to the ambiguous or problematic regions. Bins with
+spuriously high counts (``bad bins,'' typically around centromeric and
+telomeric regions) are masked for downstream analysis. This procedure
+normalizes bin counts for biases correlated with GC content by fitting a
+LOWESS curve to the GC content by bin count, and subtracting the LOWESS
+estimate from each bin.  Circular binary segmentation (CBS)
+\citep{olshen2004circular}, then identifies breakpoints in the
+normalized bin counts.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -99,7 +100,8 @@ include the absolute or relative paths to the tool and required files.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Preparing the reference genome}
 \label{index}
-The human reference genome (hg19) can be downloaded from the
+\paragraph{hg19 download and pre-processing:}
+The hg19 reference genome can be downloaded from the
 \href{http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/chromFa.tar.gz}
 {UCSC Genome Browser}. Alternate haplotypes are not used for analysis.
 Additionally, the
@@ -107,18 +109,27 @@ Additionally, the
 regions} on chrY are masked by replacing the bases with Ns. All the
 chromosome files can then the merged into one fasta file.
 
+\paragraph{hg38 download:}
+The hg38 reference genome can be downloaded from the 
+\href{https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/analysisSet/hg38.analysisSet.fa.gz}
+{UCSC Genome Browser}. 
+The hg38 ``Analysis set'' has the PAR regions masked and does not
+contain alternate haplotypes. No pre-processing is required and the genome
+can be used directly. 
+
+\paragraph{Generating BWA index:}
 % build the index
 \prog{bwa}, the program used to align reads to the reference genome,
 requires the reference genome to be prepossessed once before the first
 use.
 \begin{verbatim}
-$ bwa index hg19.fa
+$ bwa index {reference.fa}
 \end{verbatim}
 
 % prebuilt index
-The reference genome and the prebuilt index can be downloaded from
-\href{}{here}. It is highly recommended to use this pre-built index to
-maintain consistency.
+% The reference genome and the prebuilt index can be downloaded from
+% \href{}{here}. It is highly recommended to use this pre-built index % to
+% maintain consistency.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Pre-alignment QC}
@@ -351,19 +362,25 @@ if it is aligned to ambiguous or problematic regions, otherwise the
 count of the bin it belongs to is incremented by one.
 % cmd
 \begin{verbatim}
-$ getBinCounts.py -i sample_fwd.bam -b hg19_5k_gz_enc_bins.bed \
-    -d hg19_150bp_dz_enc.bed -o sample_5k_counts.bed \
+$ getBinCounts.py -i sample_fwd.bam \ 
+    -b {hg19/hg38}_{bins}_gz_enc_bins.bed \
+    -d {hg19/hg38}_150bp_dz_enc.bed -o sample_5k_counts.bed \
     -v > sample_5k_counts_stats.txt
 \end{verbatim}
 
 % data
 \prog{getBinCounts.py} is located in the
-\href{https://github.com/CSI-Cancer/CNVPipeline/tree/master/scripts}{scripts}
+\href{https://github.com/rishvanth-kp/cna_utils/tree/master/scripts}{scripts}
 directory and the bed files are located in the
-\href{https://github.com/CSI-Cancer/CNVPipeline/tree/master/data}{data}
-directory in the GitHub repository. The above command determines the
-counts for 5000 bin. For generating profiles at other resolutions, use
-the appropriate bed file.
+\href{https://github.com/rishvanth-kp/cna_utils/tree/master/data}{data}
+directory in the GitHub repository. 
+%
+For example, to generate profiles for hg38 at 5000 bin resolution, use
+\prog{-b hg38\_5k\_gz\_enc\_bins.bed} and 
+\prog{-d hg38\_150bp\_dz\_enc.bed}.
+%
+For generating profiles for hg19 or at other bin resolutions, use
+the appropriate bed files.
 
 % output
 The output is a bed file that contains the genomic coordinates of the
@@ -382,12 +399,14 @@ segmented using circular binary segmentation.
 
 % input
 \prog{cnvProfile.R} takes as input the bin counts, a bed file containing
-the GC content of each bin, and an option bed file containing the ``bad
+the GC content of each bin, and an optional bed file containing the ``bad
 bins.''
 % cmd
 \begin{verbatim}
-$ cnvProfile.R -b sample_5k_counts.bed -g hg19_5k_gz_enc_gc.bed \
-    -e hg19_5k_gz_enc_badbins.bed -o {output_dir} -n {sample_name} -v
+$ cnvProfile.R -b sample_5k_counts.bed 
+    -g {hg19/hg38}_{bins}_gz_enc_gc.bed \
+    -e {optional:bad_bins_bed} \
+    -o {output_dir} -n {sample_name} -v
 \end{verbatim}
 
 % output
